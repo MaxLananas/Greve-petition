@@ -1,0 +1,35 @@
+name: Vérifications du site
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  site:
+    name: API, build et parcours de signature
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Récupérer le projet
+        uses: actions/checkout@v7.0.1
+      - name: Installer Node.js
+        uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '22.22.3'
+          cache: npm
+      - name: Installer les dépendances
+        run: npm ci
+      - name: Tester l’API et la confidentialité
+        run: npm test
+      - name: Vérifier TypeScript
+        run: npm run check
+      - name: Compiler et tester le site dans le navigateur
+        run: npm run test:browser
