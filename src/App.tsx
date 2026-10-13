@@ -160,6 +160,9 @@ export default function App() {
 
       <main id="contenu">
         <section className="hero" id="accueil" aria-labelledby="hero-title">
+        <div className="shape-float yellow ellipse" aria-hidden="true" />
+        <div className="shape-float blue arc" aria-hidden="true" />
+        <div className="shape-float dark half" aria-hidden="true" />
           <div className="container hero-inner">
             <div className="hero-copy">
               <div className="campaign-badge"><span /> MOBILISATION LYCÉENNE <span className="badge-year">2026—2027</span></div>
