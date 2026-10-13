@@ -194,8 +194,10 @@ export async function handleApi(request, env, _context = {}, dependencies = {}) 
   if (request.method !== known[path]) return json({ error: 'Méthode non autorisée.' }, 405, { Allow: known[path] })
   if (request.method === 'POST' && crossOrigin(request)) return json({ error: 'Merci de faire cette demande depuis le site de la pétition.' }, 403)
   if (!env.DB?.prepare && !env.DATABASE_URL) {
-    return json({ status: 'error', code: 'DB_NOT_CONFIGURED', error: 'Reliez une base (D1 via DB, ou Supabase via DATABASE_URL) dans Cloudflare Pages Variables.' }, 503)
+    return json({ status: 'error', code: 'DB_NOT_CONFIGURED', error: 'La base n'est pas configurée. Reliez une base D1 (variable DB) OU configurez DATABASE_URL (Supabase) dans Cloudflare Pages Variables.' }, 503)
   }
+  // Note : DATABASE_URL est reconnu mais le backend actuel requiert D1 (env.DB).
+  // Pour Supabase pur, remplacez env.DB par un appel supabase-js dans cette fonction.
   if (Boolean(env.TURNSTILE_SITE_KEY) !== Boolean(env.TURNSTILE_SECRET_KEY)) {
     return json({ code: 'TURNSTILE_NOT_CONFIGURED', error: 'La protection anti-robot doit avoir ses deux clés configurées, ou être désactivée.' }, 503)
   }
