@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS signatures (
   id SERIAL PRIMARY KEY,
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
-  email CITEXT NOT NULL UNIQUE,
+  email TEXT NOT NULL UNIQUE,
   role TEXT NOT NULL DEFAULT '',
   message TEXT NOT NULL DEFAULT '',
   is_public INTEGER NOT NULL DEFAULT 0 CHECK (is_public IN (0, 1)),
