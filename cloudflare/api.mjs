@@ -196,6 +196,15 @@ export async function handleApi(request, env, _context = {}, dependencies = {}) 
   if (!env.DB?.prepare && !env.DATABASE_URL) {
     return json({ status: 'error', code: 'DB_NOT_CONFIGURED', error: 'La base n'est pas configurée. Reliez une base D1 (variable DB) OU configurez DATABASE_URL (Supabase) dans Cloudflare Pages Variables.' }, 503)
   }
+  // Supabase / PostgreSQL adapter: utilisée quand DATABASE_URL est présent sans DB (D1)
+  if (env.DATABASE_URL && !env.DB?.prepare) {
+    try {
+      const { createDBFromEnv } = await import('../shared/postgres-adapter.mjs')
+      env.DB = createDBFromEnv(env)
+    } catch (e) {
+      console.error('Adapter Supabase échoué (postgres):', e?.message || e)
+    }
+  }
   // Note : DATABASE_URL est reconnu mais le backend actuel requiert D1 (env.DB).
   // Pour Supabase pur, remplacez env.DB par un appel supabase-js dans cette fonction.
   if (Boolean(env.TURNSTILE_SITE_KEY) !== Boolean(env.TURNSTILE_SECRET_KEY)) {
