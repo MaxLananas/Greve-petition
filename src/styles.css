@@ -712,3 +712,15 @@ h2 > span { color: var(--blue); }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Formes géométriques sortantes — DA ultra-pro */
+.shape-float { position: absolute; z-index: 10; pointer-events: none; opacity: 0.92; mix-blend-mode: multiply; }
+.shape-float.yellow { background: #FFC72C; }
+.shape-float.blue { background: #1E81CE; }
+.shape-float.dark { background: #0A2D5E; }
+.hero-section { position: relative; overflow: visible; }
+.hero-section .shape-float.ellipse { border-radius: 50%; width: 300px; height: 220px; top: -60px; left: -80px; transform: rotate(-12deg); }
+.hero-section .shape-float.arc { width: 280px; height: 280px; border: 24px solid #FFC72C; border-radius: 50%; top: 20%; right: -60px; transform: rotate(18deg); }
+.hero-section .shape-float.half { width: 200px; height: 120px; border-radius: 100px 100px 0 0; bottom: -40px; left: 15%; background: #0A2D5E; transform: rotate(-6deg); }
+.hero-headline { font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -4.5px; line-height: 0.82; text-wrap: balance; }
+.hero-sub { font-family: 'Space Grotesk', sans-serif; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; font-size: 9px; color: #176eae; }
