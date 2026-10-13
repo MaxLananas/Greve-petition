@@ -1,0 +1,4 @@
+# Préserver les documents et visuels à l’octet près, sans traitement comme du texte.
+*.pdf binary
+*.png binary
+*.woff2 binary
