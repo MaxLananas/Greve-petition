@@ -194,7 +194,7 @@ export async function handleApi(request, env, _context = {}, dependencies = {}) 
   if (request.method !== known[path]) return json({ error: 'Méthode non autorisée.' }, 405, { Allow: known[path] })
   if (request.method === 'POST' && crossOrigin(request)) return json({ error: 'Merci de faire cette demande depuis le site de la pétition.' }, 403)
   if (!env.DB?.prepare && !env.DATABASE_URL) {
-    return json({ status: 'error', code: 'DB_NOT_CONFIGURED', error: 'La base n'est pas configurée. Reliez une base D1 (variable DB) OU configurez DATABASE_URL (Supabase) dans Cloudflare Pages Variables.' }, 503)
+    return json({ status: 'error', code: 'DB_NOT_CONFIGURED', error: "La base n'est pas configurée. Reliez une base D1 (variable DB) OU configurez DATABASE_URL (Supabase) dans Cloudflare Pages Variables." }, 503)
   }
   // Supabase / PostgreSQL adapter: utilisée quand DATABASE_URL est présent sans DB (D1)
   if (env.DATABASE_URL && !env.DB?.prepare) {
