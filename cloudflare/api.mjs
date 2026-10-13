@@ -1,4 +1,5 @@
 import { CONSENT_VERSION, cleanText, validEmail, csvCell, validateSignature } from '../shared/petition.mjs'
+import { createClient } from '@supabase/supabase-js'
 
 const MAX_BODY_BYTES = 12 * 1024
 const RATE_WINDOW_SECONDS = 10 * 60
