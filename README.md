@@ -108,20 +108,20 @@ Les tests navigateur utilisent un serveur de production local et **une base en m
 
 Les trois documents initialement fournis à la racine sont conservés. Les données et les secrets ne sont pas versionnés.
 
-## Hébergement gratuit (Cloudflare Pages + D1)
+## Hébergement gratuit (Cloudflare Pages + Supabase)
 
-Le site peut être déployé 100 % sur Cloudflare Pages avec la base D1. Aucune dépense ni abonnement n’est requis tant que vous restez sur le plan gratuit (500 builds/mois, 100 projets, 10 bases D1, 100 000 requêtes Workers/jour, 5 Go de stockage D1 et 5 M lignes lues/jour).
+Le site est conçu pour fonctionner avec Supabase (PostgreSQL) comme base de signatures. Page statique sur Cloudflare Pages. Aucune dépense nécessaire sur le plan gratuit. Aucune dépense ni abonnement n’est requis tant que vous restez sur le plan gratuit (500 builds/mois, 100 projets, 10 bases D1, 100 000 requêtes Workers/jour, 5 Go de stockage D1 et 5 M lignes lues/jour).
 
 Avant le premier déploiement :
 - Créez un projet Pages connecté au dépôt (branch `arena/7e2627b4-greve-petition`), commande `npm run build`, dossier `dist`.
-- Dans le projet > **Settings → Bindings → Add → D1 database bindings**, liez `DB` à une base créée dans **Workers & Pages → D1 → Create database** (`leborgne-petition`).
+- Dans Supabase : créez le projet → SQL Editor → collez `migrations/0001_signatures-postgres.sql` → relevez `DATABASE_URL` dans Project Settings → Database.
 - Initialisez : `npm run cloudflare:db:local` (crée le schéma local) ; en ligne `wrangler d1 execute DB --remote --file migrations/0001_signatures.sql`.
 - Renseignez `CONTACT_EMAIL`, `PUBLIC_URL=https://...`, `ADMIN_TOKEN` ≥ 32 caractères, éventuellement `TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY` (optionnel ; le site fonctionne sans, mais avec il devient plus difficile à automatiser).
 - Pour l’export : `npm run export:signatures -- data/export.csv`, avec `PUBLIC_URL` (HTTPS) et `ADMIN_TOKEN`. Le fichier produit doit rester privé et ne jamais être publié.
 
-En cas de dépassement du quota gratuit de D1 : l’API renvoie un code `FREE_QUOTA_REACHED` (503) et la signature n’est pas enregistrée ; aucune donnée est orpheline car les écritures sont dans une transaction avec le compteur. Réessayez après le renouvellement du quota ; il n’est pas nécessaire de payer.
+En cas de dépassement du quota gratuit de Supabase (500 Mo / base, 2 Go/mois de sortie) : l’API renvoie un code `FREE_QUOTA_REACHED` (503) et la signature n’est pas enregistrée ; aucune donnée est orpheline car les écritures sont dans une transaction avec le compteur. Réessayez après le renouvellement du quota ; il n’est pas nécessaire de payer.
 
-Le tutoriel détaillé est dans `README.md` (section Cloudflare) et dans le dépôt ; la version locale (`npm run dev`) et la version Pages (`npm run cloudflare:dev`) sont toutes deux fonctionnelles à partir du même code.
+Le tutoriel détaillé est dans `DEPLOY-TUTORIAL.md` (172 lignes, étapes complètes) (section Cloudflare) et dans le dépôt ; la version locale (`npm run dev`) et la version Pages (`npm run cloudflare:dev`) sont toutes deux fonctionnelles à partir du même code.
 
 ### Les limites réelles du plan gratuit
 
