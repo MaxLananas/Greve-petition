@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "leborgne-petition-local",
+  "compatibility_date": "2026-10-01",
+  "send_metrics": false,
+  // Fichier explicitement réservé au développement local, jamais déployé.
+  // Aucun identifiant de base Cloudflare n'est inventé ou requis ici.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "leborgne-petition-local",
+      "migrations_dir": "./migrations"
+    }
+  ],
+  "vars": {
+    "SIGNATURE_GOAL": "1000",
+    "SIGNATURE_RATE_LIMIT": "60"
+  }
+}

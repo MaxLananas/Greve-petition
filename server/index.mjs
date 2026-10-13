@@ -3,6 +3,7 @@ import { createServer } from 'node:http'
 import { resolve } from 'node:path'
 import { readFile } from 'node:fs/promises'
 import { createApp } from './app.mjs'
+import { publicMetadata } from '../shared/metadata.mjs'
 
 const production = process.env.NODE_ENV === 'production'
 const port = Number(process.env.PORT || 3000)
@@ -18,18 +19,6 @@ const { app, db } = createApp({
 const server = createServer(app)
 let vite
 
-function publicMetadata(html) {
-  if (!process.env.PUBLIC_URL) return html
-  try {
-    const url = new URL(process.env.PUBLIC_URL)
-    if (!['http:', 'https:'].includes(url.protocol)) return html
-    const base = url.origin
-    return html.replace('content="/assets/partage.png"', `content="${base}/assets/partage.png"`)
-      .replace('</head>', `  <meta property="og:url" content="${base}" />\n    <link rel="canonical" href="${base}" />\n  </head>`)
-  } catch {
-    return html
-  }
-}
 
 if (!production) {
   const { createServer: createViteServer } = await import('vite')
@@ -40,7 +29,7 @@ if (!production) {
   app.use(vite.middlewares)
   app.get('/{*path}', async (req, res, next) => {
     try {
-      const template = publicMetadata(await readFile(resolve('index.html'), 'utf8'))
+      const template = publicMetadata(await readFile(resolve('index.html'), 'utf8'), process.env.PUBLIC_URL)
       const html = await vite.transformIndexHtml(req.originalUrl, template)
       res.status(200).type('html').send(html)
     } catch (error) {
@@ -52,7 +41,7 @@ if (!production) {
   app.use(express.static(resolve('dist'), { index: false, maxAge: '1h' }))
   app.get('/{*path}', async (_req, res, next) => {
     try {
-      const html = publicMetadata(await readFile(resolve('dist/index.html'), 'utf8'))
+      const html = publicMetadata(await readFile(resolve('dist/index.html'), 'utf8'), process.env.PUBLIC_URL)
       res.type('html').send(html)
     } catch (error) {
       next(error)

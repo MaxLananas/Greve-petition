@@ -99,7 +99,8 @@ Les tests navigateur utilisent un serveur de production local et **une base en m
 ## Structure
 
 - `src/` : React / TypeScript, composants, contenu et styles.
-- `server/app.mjs` : API Express, validation, base, export et retrait.
+- `shared/` : fichiers communs (API, validation, métadonnées) ; `cloudflare/` : API Pages Functions ; `functions/` : points d’entrée Workers ; `migrations/` : SQL D1.
+- `server/app.mjs` : API Express, validation, base, export et retrait (version locale).
 - `server/index.mjs` : serveur unique ; Vite en développement, fichiers compilés en production.
 - `public/assets/` : logo dérivé du fichier fourni, favicon et visuel de partage.
 - `public/documents/` : dossier PDF original, inchangé.
@@ -107,6 +108,28 @@ Les tests navigateur utilisent un serveur de production local et **une base en m
 
 Les trois documents initialement fournis à la racine sont conservés. Les données et les secrets ne sont pas versionnés.
 
-## Vérifications sur GitHub
+## Hébergement gratuit (Cloudflare Pages + D1)
 
-Le workflow `.github/workflows/ci.yml` relance les tests de l’API, la vérification TypeScript, le build et les tests navigateur à chaque push ou pull request. Il utilise une base isolée ; aucune signature réelle ni aucun secret de production ne sont nécessaires.
+Le site peut être déployé 100 % sur Cloudflare Pages avec la base D1. Aucune dépense ni abonnement n’est requis tant que vous restez sur le plan gratuit (500 builds/mois, 100 projets, 10 bases D1, 100 000 requêtes Workers/jour, 5 Go de stockage D1 et 5 M lignes lues/jour).
+
+Avant le premier déploiement :
+- Créez un projet Pages connecté au dépôt (branch `arena/7e2627b4-greve-petition`), commande `npm run build`, dossier `dist`.
+- Dans le projet > **Settings → Bindings → Add → D1 database bindings**, liez `DB` à une base créée dans **Workers & Pages → D1 → Create database** (`leborgne-petition`).
+- Initialisez : `npm run cloudflare:db:local` (crée le schéma local) ; en ligne `wrangler d1 execute DB --remote --file migrations/0001_signatures.sql`.
+- Renseignez `CONTACT_EMAIL`, `PUBLIC_URL=https://...`, `ADMIN_TOKEN` ≥ 32 caractères, éventuellement `TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY` (optionnel ; le site fonctionne sans, mais avec il devient plus difficile à automatiser).
+- Pour l’export : `npm run export:signatures -- data/export.csv`, avec `PUBLIC_URL` (HTTPS) et `ADMIN_TOKEN`. Le fichier produit doit rester privé et ne jamais être publié.
+
+En cas de dépassement du quota gratuit de D1 : l’API renvoie un code `FREE_QUOTA_REACHED` (503) et la signature n’est pas enregistrée ; aucune donnée est orpheline car les écritures sont dans une transaction avec le compteur. Réessayez après le renouvellement du quota ; il n’est pas nécessaire de payer.
+
+Le tutoriel détaillé est dans `README.md` (section Cloudflare) et dans le dépôt ; la version locale (`npm run dev`) et la version Pages (`npm run cloudflare:dev`) sont toutes deux fonctionnelles à partir du même code.
+
+### Les limites réelles du plan gratuit
+
+- **Pages** : pas de limite de trafic public ; 500 builds/mois ; pas d’hébergement permanent pour le backend (Pages Functions suffisent).
+- **D1 (base)** : 500 Mo / base, 5 Go par compte, jusqu’à 10 bases, 5 000 requêtes / invocation, 100 000 lignes lues / jour (renouvelé à 00:00 UTC). Au dépassement : aucune insertion ni suppression ; le site reste visible.
+- **Workers** (les Functions Pages sont facturées comme Workers) : 100 000 requêtes / jour. Une pétition locale ne dépassera pas cette limite, sauf campagne publique massive.
+- **Pas de nom de domaine obligatoire** : le lien `https://<projet>.pages.dev` fonctionne directement.
+
+Le site est 100 % gratuit sur cette offre, mais pas infini : si la campagne devient très grande, le passage au plan Workers Paid ($5/mois) supprime les quotas et conserve toutes les données.
+
+Le site reste visible même si D1 atteint ses limites, car l’interface est statique. Seule la signature devient temporairement impossible jusqu’au renouvellement du quota.

@@ -5,18 +5,10 @@ import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
 import { mkdirSync, chmodSync } from 'node:fs'
 import { dirname } from 'node:path'
 
-export const CONSENT_VERSION = '2026-10-13-v1'
-export const ROLES = ['', 'eleve', 'personnel', 'parent', 'ancien', 'soutien']
+import { CONSENT_VERSION, cleanText, validEmail, csvCell, validateSignature } from '../shared/petition.mjs'
+export { CONSENT_VERSION, ROLES } from '../shared/petition.mjs'
 
 const hash = (value) => createHash('sha256').update(value).digest('hex')
-const cleanText = (value) => typeof value === 'string' ? value.trim().normalize('NFC') : ''
-const validEmail = (email) => email.length <= 254 && /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email)
-const validName = (name) => name.length >= 1 && name.length <= 80 && !/[<>\x00-\x1f\x7f]/.test(name)
-const csvCell = (value) => {
-  const text = String(value ?? '')
-  const safe = /^[\s]*[=+\-@]/.test(text) ? `'${text}` : text
-  return `"${safe.replaceAll('"', '""')}"`
-}
 
 export function createApp({
   databasePath = './data/signatures.sqlite',
@@ -114,21 +106,7 @@ export function createApp({
       return res.status(403).json({ error: 'Merci de signer depuis le site de la pétition.' })
     }
     const body = req.body ?? {}
-    const firstName = cleanText(body.firstName)
-    const lastName = cleanText(body.lastName)
-    const email = cleanText(body.email).toLowerCase()
-    const role = cleanText(body.role)
-    const message = cleanText(body.message)
-    const fields = {}
-
-    if (!validName(firstName)) fields.firstName = 'Indiquez votre prénom (80 caractères maximum).'
-    if (!validName(lastName)) fields.lastName = 'Indiquez votre nom (80 caractères maximum).'
-    if (!validEmail(email)) fields.email = 'Indiquez une adresse e-mail valide.'
-    if (!ROLES.includes(role)) fields.role = 'Choisissez un profil proposé dans la liste.'
-    if (message.length > 1000 || /[\x00-\x08\x0b\x0c\x0e-\x1f]/.test(message)) {
-      fields.message = 'Votre message doit comporter au maximum 1 000 caractères.'
-    }
-    if (body.consent !== true) fields.consent = 'Votre accord est nécessaire pour enregistrer la signature.'
+    const { firstName, lastName, email, role, message, fields } = validateSignature(body)
     if (body.website) return res.status(400).json({ error: 'Envoi non valide.' })
     if (Object.keys(fields).length) {
       return res.status(422).json({ error: 'Vérifiez les informations du formulaire.', fields })

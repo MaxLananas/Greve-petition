@@ -13,6 +13,7 @@ export interface PetitionData {
   publicCount: number
   supporters: Supporter[]
   contactEmail: string | null
+  turnstileSiteKey?: string | null
 }
 
 export interface SignatureInput {
@@ -24,6 +25,7 @@ export interface SignatureInput {
   consent: boolean
   isPublic: boolean
   website: string
+  turnstileToken?: string
 }
 
 export interface SignatureResult {

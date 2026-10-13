@@ -4,6 +4,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 COPY index.html tsconfig.json vite.config.ts ./
 COPY src ./src
+COPY shared ./shared
 COPY public ./public
 RUN npm run build
 
@@ -14,6 +15,7 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY --from=build /app/dist ./dist
 COPY server ./server
+COPY shared ./shared
 RUN mkdir -p /app/data && chown -R node:node /app/data
 USER node
 EXPOSE 3000

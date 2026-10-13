@@ -1,0 +1,12 @@
+# Optionnel : copier dans .dev.vars pour Wrangler LOCAL uniquement.
+# En ligne, configurer ces valeurs dans Pages > Settings > Variables and Secrets.
+CONTACT_EMAIL=
+SIGNATURE_GOAL=1000
+SIGNATURE_RATE_LIMIT=60
+# Secret privé d'au moins 32 caractères pour les exports. Jamais de préfixe VITE_.
+ADMIN_TOKEN=
+# Secret privé pour pseudonymiser les compteurs anti-abus par IP.
+SIGNATURE_RATE_SECRET=
+# Facultatif : les deux clés Turnstile ensemble, sinon laisser les deux vides.
+TURNSTILE_SITE_KEY=
+TURNSTILE_SECRET_KEY=

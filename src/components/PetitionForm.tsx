@@ -2,17 +2,19 @@ import { useState, type FormEvent } from 'react'
 import { ArrowRight, Check, CheckCheck, ChevronDown, Copy, LoaderCircle, LockKeyhole, MessageSquare, PenLine, Share2, ShieldCheck } from 'lucide-react'
 import { ApiError, copyText, signPetition } from '../api'
 import { ROLE_LABELS } from '../data'
+import Turnstile from './Turnstile'
 import type { Role, SignatureInput, SignatureResult } from '../types'
 
 const EMPTY_FORM: SignatureInput = {
   firstName: '', lastName: '', email: '', role: '', message: '', consent: false, isPublic: false, website: '',
 }
 
-export default function PetitionForm({ onSuccess, onPrivacy, onShare, notify }: {
+export default function PetitionForm({ onSuccess, onPrivacy, onShare, notify, turnstileSiteKey }: {
   onSuccess: (result: SignatureResult) => void
   onPrivacy: () => void
   onShare: () => void
   notify: (message: string) => void
+  turnstileSiteKey?: string | null
 }) {
   const [values, setValues] = useState<SignatureInput>({ ...EMPTY_FORM })
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -21,6 +23,8 @@ export default function PetitionForm({ onSuccess, onPrivacy, onShare, notify }: 
   const [messageOpen, setMessageOpen] = useState(false)
   const [success, setSuccess] = useState<SignatureResult | null>(null)
   const [codeCopied, setCodeCopied] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState('')
+  const [turnstileReset, setTurnstileReset] = useState(0)
 
   function update<K extends keyof SignatureInput>(field: K, value: SignatureInput[K]) {
     setValues((current) => ({ ...current, [field]: value }))
@@ -36,6 +40,7 @@ export default function PetitionForm({ onSuccess, onPrivacy, onShare, notify }: 
     if (!values.lastName.trim()) fieldErrors.lastName = 'Votre nom est nécessaire.'
     if (!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(values.email.trim())) fieldErrors.email = 'Indiquez une adresse e-mail valide.'
     if (!values.consent) fieldErrors.consent = 'Votre accord est nécessaire pour signer.'
+    if (turnstileSiteKey && !turnstileToken) fieldErrors.turnstile = 'Validez la vérification anti-robot avant de signer.'
     if (Object.keys(fieldErrors).length) {
       setErrors(fieldErrors)
       setError('Il reste quelques informations à vérifier.')
@@ -46,7 +51,7 @@ export default function PetitionForm({ onSuccess, onPrivacy, onShare, notify }: 
     setError('')
     setErrors({})
     try {
-      const result = await signPetition(values)
+      const result = await signPetition({ ...values, turnstileToken })
       setSuccess(result)
       setValues({ ...EMPTY_FORM })
       onSuccess(result)
@@ -60,6 +65,7 @@ export default function PetitionForm({ onSuccess, onPrivacy, onShare, notify }: 
       }
     } finally {
       setPending(false)
+      if (turnstileSiteKey) { setTurnstileToken(''); setTurnstileReset((value) => value + 1) }
     }
   }
 
@@ -116,6 +122,10 @@ export default function PetitionForm({ onSuccess, onPrivacy, onShare, notify }: 
             <label className="checkbox-label" htmlFor="signature-isPublic"><input id="signature-isPublic" name="isPublic" type="checkbox" checked={values.isPublic} onChange={(e) => update('isPublic', e.target.checked)} /><span>Afficher mon prénom et l’initiale de mon nom parmi les soutiens.</span></label>
           </div>
           <div className="honey-field" aria-hidden="true"><label htmlFor="signature-website">Ne pas remplir ce champ</label><input id="signature-website" name="website" autoComplete="off" tabIndex={-1} value={values.website} onChange={(e) => update('website', e.target.value)} /></div>
+          {turnstileSiteKey && <Turnstile siteKey={turnstileSiteKey} resetKey={turnstileReset} error={errors.turnstile} onToken={(token) => {
+            setTurnstileToken(token)
+            if (token) setErrors((current) => ({ ...current, turnstile: '' }))
+          }} />}
           {error && <div className="form-error" role="alert">{error}</div>}
           <button className="button button-yellow button-full submit-button" type="submit" disabled={pending}>{pending ? <LoaderCircle size={19} className="spin" /> : <PenLine size={18} />}{pending ? 'Enregistrement en cours…' : 'Je signe la pétition'}{!pending && <ArrowRight size={20} />}</button>
         </fieldset>
