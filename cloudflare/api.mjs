@@ -175,6 +175,16 @@ async function exportCsv(request, env, now) {
 
 /** API Pages Functions. L'interface reste sur des URL relatives, sans CORS public. */
 export async function handleApi(request, env, _context = {}, dependencies = {}) {
+  // Supabase / PostgreSQL fallback
+  if (env.DATABASE_URL && !env.DB?.prepare) {
+    try {
+      const { createDBFromEnv } = await import('../shared/postgres-adapter.mjs')
+      env.DB = createDBFromEnv(env)
+    } catch {
+      // ignore
+    }
+  }
+
   const path = new URL(request.url).pathname.replace(/\/+$/, '')
   const known = {
     '/api/health': 'GET', '/api/petition': 'GET', '/api/signatures': 'POST',
@@ -183,8 +193,8 @@ export async function handleApi(request, env, _context = {}, dependencies = {}) 
   if (!known[path]) return json({ error: 'Cette route n’existe pas.' }, 404)
   if (request.method !== known[path]) return json({ error: 'Méthode non autorisée.' }, 405, { Allow: known[path] })
   if (request.method === 'POST' && crossOrigin(request)) return json({ error: 'Merci de faire cette demande depuis le site de la pétition.' }, 403)
-  if (!env.DB?.prepare || !env.DB?.batch) {
-    return json({ status: 'error', code: 'D1_NOT_CONFIGURED', error: 'La base de signatures n’est pas configurée. Reliez une base D1 à la variable DB dans Cloudflare Pages.' }, 503)
+  if (!env.DB?.prepare && !env.DATABASE_URL) {
+    return json({ status: 'error', code: 'DB_NOT_CONFIGURED', error: 'Reliez une base (D1 via DB, ou Supabase via DATABASE_URL) dans Cloudflare Pages Variables.' }, 503)
   }
   if (Boolean(env.TURNSTILE_SITE_KEY) !== Boolean(env.TURNSTILE_SECRET_KEY)) {
     return json({ code: 'TURNSTILE_NOT_CONFIGURED', error: 'La protection anti-robot doit avoir ses deux clés configurées, ou être désactivée.' }, 503)
