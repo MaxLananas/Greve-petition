@@ -112,7 +112,7 @@ Les tests navigateur utilisent un serveur de production local et **une base en m
 - `public/documents/` : dossier PDF original, inchangé.
 - `data/` : base privée créée au lancement, **ignorée par Git**.
 
-Les documents initialement fournis à la racine sont conservés. Les données et les secrets ne sont pas versionnés.
+Les données et les secrets ne sont pas versionnés.
 
 ## Hébergement gratuit (Cloudflare Pages + D1)
 
