@@ -1,0 +1,19 @@
+{
+  // Développement LOCAL uniquement : jamais de secrets ici.
+  // La production (Pages + D1) se configure dans le tableau de bord Pages :
+  // Settings → Functions → D1 bindings (nom : DB) + Environment Variables.
+  // Voir DEPLOY-D1-RAPIDE.md.
+  "$schema": "https://developers.cloudflare.com/schemas/wrangler.jsonc",
+  "name": "leborgne-petition-local",
+  "compatibility_date": "2026-10-01",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "leborgne-petition-local",
+      "database_id": "local-dev-only"
+    }
+  ],
+  "vars": {
+    "SIGNATURE_GOAL": "1000"
+  }
+}

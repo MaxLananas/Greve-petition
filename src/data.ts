@@ -5,7 +5,7 @@ export const PDF_URL = '/documents/revendications-leborgne-en-action.pdf'
 export const ROLE_LABELS: Record<Role, string> = {
   '': 'Soutien',
   eleve: 'Lycéen·ne',
-  personnel: 'Enseignant·e / personnel',
+  personnel: 'Personnel',
   parent: 'Parent d’élève',
   ancien: 'Ancien·ne élève',
   soutien: 'Citoyen·ne solidaire',
@@ -101,12 +101,36 @@ export const PRIORITIES: Priority[] = [
       'Clarifier par écrit le traitement des absences liées à la mobilisation et réexaminer les situations contestées.',
     ],
   },
+  {
+    id: 'parcoursup', number: '08', title: 'Parcoursup',
+    description: 'Des places ouvertes dans le supérieur pour que chaque lycéen ait sa place, et une orientation par choix, pas à la loterie.',
+    color: 'navy', icon: 'compass', page: 9,
+    observation: 'L’orientation est vécue comme une sélection, plutôt que comme un accès aux études choisies. Les lycéens demandent des places ouvertes et une orientation par choix, pas à la loterie.',
+    demands: [
+      'Ouvrir davantage de places dans les formations du supérieur pour que chaque lycéen ait sa place.',
+      'Mettre fin à la sélection sur Parcoursup : des places ouvertes et une orientation par choix, accompagnée dès la seconde.',
+      'Rendre les critères d’admission lisibles et équitables pour les lycéens et leurs familles.',
+      'Renforcer l’accompagnement personnalisé aux vœux au sein du lycée.',
+    ],
+  },
+  {
+    id: 'specialites', number: '09', title: 'Des spé efficaces',
+    description: 'Des programmes réalistes, qui prennent en compte la vitesse d’apprentissage d’un élève en développement, plutôt qu’un rythme destiné à faire des élèves des encyclopédies sur pattes en un temps record.',
+    color: 'green', icon: 'book', page: 9,
+    observation: 'Les spécialités complexifient les emplois du temps et fragilisent la stabilité du groupe classe. Les lycéens signalent des programmes trop chargés, imposés à un rythme intenable.',
+    demands: [
+      'Adapter les programmes de spécialités à un rythme d’apprentissage réaliste, qui respecte la vitesse d’apprentissage des élèves.',
+      'Privilégier la compréhension durable à l’accumulation de contenus.',
+      'Stabiliser les emplois du temps et le groupe classe, fragilisés par l’organisation actuelle.',
+      'Mieux répartir les échéances et les évaluations sur l’année.',
+    ],
+  },
 ]
 
 export const FAQS = [
   {
     question: 'Qui peut signer la pétition ?',
-    answer: 'Tout le monde peut soutenir la mobilisation : lycéens, enseignants et personnels, parents, anciens élèves et citoyens solidaires. Il n’est pas nécessaire d’être scolarisé au lycée Yves Leborgne. Votre profil est facultatif.',
+    answer: 'Tout le monde peut soutenir la mobilisation : lycéens, personnels, parents, anciens élèves et citoyens solidaires. Il n’est pas nécessaire d’être scolarisé au lycée Yves Leborgne. Votre profil est facultatif.',
   },
   {
     question: 'Mon nom et mon e-mail seront-ils publics ?',
@@ -122,6 +146,6 @@ export const FAQS = [
   },
   {
     question: 'Où lire l’ensemble des revendications ?',
-    answer: 'Le dossier complet 2026–2027, disponible sur cette page, comporte neuf pages. En plus des sept priorités, il aborde les bâtiments, la sécurité, les moyens humains, la santé et l’avenir scolaire. Les constats sont ceux rapportés dans les documents transmis ; les demandes nouvelles ou précisées restent soumises à validation collective.',
+    answer: 'Le dossier complet 2026–2027, disponible sur cette page, comporte neuf pages. En plus des neuf priorités, il aborde les bâtiments, la sécurité, les moyens humains, la santé et l’avenir scolaire. Les constats sont ceux rapportés dans les documents transmis ; les demandes nouvelles ou précisées restent soumises à validation collective.',
   },
 ]

@@ -12,7 +12,7 @@ export interface PetitionData {
   goal: number
   publicCount: number
   supporters: Supporter[]
-  contactEmail: string | null
+  roleCounts: Record<string, number>
   turnstileSiteKey?: string | null
 }
 
@@ -41,7 +41,7 @@ export interface Priority {
   title: string
   description: string
   color: 'blue' | 'navy' | 'green'
-  icon: 'meals' | 'heat' | 'cafe' | 'computer' | 'hygiene' | 'sport' | 'gate'
+  icon: 'meals' | 'heat' | 'cafe' | 'computer' | 'hygiene' | 'sport' | 'gate' | 'compass' | 'book'
   page: number
   observation: string
   demands: string[]

@@ -43,8 +43,8 @@ try {
   await page.evaluate(() => document.fonts.ready)
   assert.match(await page.title(), /Étudier\. Dignement\./)
   assert.match(await page.locator('h1').innerText(), /ÉTUDIER\.\nDIGNEMENT\./)
-  assert.equal(await page.locator('.priority-card').count(), 7)
-  passed('La page, les sept priorités et les polices locales se chargent en production')
+  assert.equal(await page.locator('.priority-card').count(), 9)
+  passed('La page, les neuf priorités et les polices locales se chargent en production')
 
   const scan = async (label) => {
     const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()
@@ -102,9 +102,9 @@ try {
   passed('La signature est réellement enregistrée, le compteur et les soutiens sont actualisés')
   await scan('La confirmation de signature et le soutien public sont accessibles')
 
-  await page.getByRole('button', { name: 'Parents', exact: true }).click()
+  await page.getByRole('button', { name: 'Parents (0)', exact: true }).click()
   await page.getByRole('heading', { name: /Pas encore de soutien public dans cette catégorie/ }).waitFor()
-  await page.getByRole('button', { name: 'Lycéens', exact: true }).click()
+  await page.getByRole('button', { name: 'Lycéens (1)', exact: true }).click()
   await page.getByRole('heading', { name: 'Camille L.', exact: true }).waitFor()
   passed('Les filtres des soutiens fonctionnent')
 
@@ -128,6 +128,26 @@ try {
   await page.keyboard.press('Escape')
   assert.equal(await page.locator('.progress-top strong').innerText(), '0')
   passed('Le retrait supprime les données et remet le compteur à zéro')
+
+  await page.evaluate(async () => {
+    const sign = (firstName, email, role) => fetch('/api/signatures', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ firstName, lastName: 'Test', email, role, consent: true, isPublic: true, message: '', website: '' }),
+    })
+    for (let i = 0; i < 5; i++) await sign(`Staf${i}`, `staf${i}@example.test`, 'personnel')
+    for (let i = 0; i < 51; i++) await sign(`Eleve${i}`, `eleve${i}@example.test`, 'eleve')
+  })
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM signatures').get().count, 56)
+  await page.reload({ waitUntil: 'networkidle' })
+  await page.getByRole('button', { name: 'Personnels (5)', exact: true }).click()
+  await page.getByRole('heading', { name: 'Staf4 T.', exact: true }).waitFor()
+  assert.equal(await page.locator('.supporter-card').count(), 5)
+  const pupils = await page.evaluate(() => fetch('/api/supporters?role=eleve').then((response) => response.json()))
+  assert.equal(pupils.supporters.length, 50)
+  assert.equal(pupils.total, 51)
+  await page.getByRole('button', { name: 'Tous les soutiens (56)', exact: true }).click()
+  passed('Chaque catégorie affiche ses 50 derniers soutiens avec son compteur')
 
   await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: url })
   await page.getByRole('button', { name: 'Faire passer le mot', exact: true }).click()

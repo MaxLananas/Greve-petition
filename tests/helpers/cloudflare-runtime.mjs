@@ -23,6 +23,8 @@ export async function createCloudflareRuntime({ bindings = {}, initialize = true
       const statements = [...regular.split(';').map((part) => part.trim()).filter(Boolean), ...triggers]
       await db.batch(statements.map((query) => db.prepare(query)))
     }
-    return { runtime, db, close: () => runtime.dispose(), fetch: (request) => runtime.dispatchFetch(request) }
+    // dispatchFetch attend une URL + init (pas un Request undici de Node).
+    const dispatch = (url, init) => runtime.dispatchFetch(String(url), init)
+    return { runtime, db, close: () => runtime.dispose(), fetch: dispatch }
   } catch (error) { await runtime.dispose(); throw error }
 }

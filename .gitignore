@@ -18,4 +18,3 @@ test-results/
 *.sqlite-wal
 *.sqlite-shm
 .cache/
-!.env.supabase.example

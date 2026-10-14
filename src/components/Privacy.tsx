@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { ArrowRight, CheckCircle2, LoaderCircle, LockKeyhole, ShieldCheck } from 'lucide-react'
 import { ApiError, withdrawSignature } from '../api'
 
-export function PrivacyContent({ contactEmail, onWithdraw }: { contactEmail: string | null; onWithdraw: () => void }) {
+export function PrivacyContent({ onWithdraw }: { onWithdraw: () => void }) {
   return (
     <div className="privacy-content">
       <p className="modal-intro">Votre soutien est important. Votre vie privée l’est aussi.</p>
@@ -13,10 +13,10 @@ export function PrivacyContent({ contactEmail, onWithdraw }: { contactEmail: str
       <h3>Que peut-on voir sur le site ?</h3>
       <p>Uniquement votre prénom, l’initiale de votre nom, votre profil et la date de signature, <strong>si vous cochez l’option d’affichage public</strong>. Votre nom complet, votre e-mail et votre message ne sont jamais exposés par l’API publique.</p>
       <h3>Hébergement et protection anti-robot</h3>
-      <p>Dans la version Cloudflare, les signatures sont conservées dans une base D1 privée. Le site peut utiliser Turnstile pour limiter les robots : Cloudflare traite alors des informations techniques de connexion et du navigateur pour cette vérification, et non à des fins publicitaires. <a className="inline-link" href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noreferrer">Politique de confidentialité de Cloudflare</a>.</p>
+      <p>Les signatures sont conservées dans une base de données privée, accessible uniquement au serveur de la pétition. Le site peut utiliser Turnstile pour limiter les robots : Cloudflare traite alors des informations techniques de connexion et du navigateur pour cette vérification, et non à des fins publicitaires. <a className="inline-link" href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noreferrer">Politique de confidentialité de Cloudflare</a>.</p>
       <h3>Qui gère les signatures ?</h3>
       <p>L’équipe organisatrice de Leborgne en Action gère cette pétition. Les informations complètes sont réservées à cette équipe via un export protégé. Elle est responsable de leur conservation pendant la mobilisation et de leur suppression à sa clôture.</p>
-      {contactEmail && <p>Pour toute demande concernant vos données : <a className="inline-link" href={`mailto:${contactEmail}`}>{contactEmail}</a>.</p>}
+      <p>Pour toute demande concernant vos données, écrivez à maxenceponche971@gmail.com.</p>
       <h3>Vous gardez le choix.</h3>
       <p>Après la signature, une référence privée vous est remise. Conservez-la pour retirer votre signature et supprimer les données associées à tout moment. Ce retrait met également à jour le compteur.</p>
       <p>Le retrait supprime les données de la base active. Des copies peuvent subsister dans les sauvegardes de l’hébergeur jusqu’à leur expiration : jusqu’à sept jours pour la récupération D1 sur le plan gratuit.</p>

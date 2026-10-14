@@ -1,4 +1,4 @@
-import { ArrowUpRight, UsersRound } from 'lucide-react'
+import { ArrowDown, ArrowUpRight, UsersRound } from 'lucide-react'
 
 export function Brand({ light = false }: { light?: boolean }) {
   return (
@@ -23,18 +23,35 @@ export function BrandShapes({ className = '' }: { className?: string }) {
   )
 }
 
+export function Starburst() {
+  return (
+    <a href="#signer" className="starburst" aria-label="Aller à la signature de la pétition">
+      <svg viewBox="0 0 120 120" aria-hidden="true" focusable="false">
+        <defs>
+          <path id="starburst-circle" d="M60,60 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0" fill="none" />
+        </defs>
+        <circle cx="60" cy="60" r="58" fill="#FFC72C" stroke="#0A2D5E" strokeWidth="2.5" />
+        <circle cx="60" cy="60" r="30" fill="none" stroke="#0A2D5E" strokeWidth="1.5" strokeDasharray="4 4" />
+        <text><textPath href="#starburst-circle" textLength="274" lengthAdjust="spacingAndGlyphs">JE SIGNE ★ JE SIGNE ★ JE SIGNE ★</textPath></text>
+      </svg>
+      <span aria-hidden="true"><ArrowDown size={26} strokeWidth={2.5} /></span>
+    </a>
+  )
+}
+
 export function CampaignPoster() {
   return (
     <div className="poster-wrap">
+      <Starburst />
       <div className="campaign-poster" aria-label="Une voix. Plusieurs forces. Une même action. Lycée Yves Leborgne, Guadeloupe.">
         <div className="poster-topline"><span>LEBORGNE<br />EN ACTION</span><ArrowUpRight size={24} strokeWidth={1.5} /></div>
         <svg className="poster-art" viewBox="0 0 420 410" fill="none" aria-hidden="true">
-          <path d="M230 -30C156 -30 96 30 96 103C96 154 79 183 52 212C126 212 180 162 230 112V-30Z" fill="#1E81CE" />
-          <path d="M260 -30C339 -30 400 29 400 108C400 190 339 249 260 249V-30Z" fill="#FFC72C" />
+          <path d="M230 -30C156 -30 96 30 96 103C96 154 79 183 52 212C126 212 180 162 230 112V-30Z" fill="#FFFFFF" />
+          <path d="M260 -30C339 -30 400 29 400 108C400 190 339 249 260 249V-30Z" fill="#1E81CE" />
           <path d="M262 340C262 293 300 255 347 255C394 255 432 293 432 340H262Z" fill="#009444" />
-          <path d="M262 340H432C432 387 394 425 347 425C300 425 262 387 262 340Z" fill="#1E81CE" />
+          <path d="M262 340H432C432 387 394 425 347 425C300 425 262 387 262 340Z" fill="#FFFFFF" />
         </svg>
-        <div className="poster-copy">UNE VOIX.<br />PLUSIEURS<br />FORCES.<br /><span>UNE MÊME<br />ACTION.</span></div>
+        <div className="poster-copy">UNE VOIX.<br />PLUSIEURS<br />FORCES.<br /><span>UNE MÊME<br /><span>ACTION.</span></span></div>
         <div className="poster-bottomline"><span>SAINTE-ANNE · GUADELOUPE</span><span>2026—2027</span></div>
       </div>
       <div className="poster-label"><span className="poster-label-icon"><UsersRound size={22} strokeWidth={1.7} /></span><span><strong>Notre lycée, notre avenir.</strong><small>Ensemble, on fait bouger les lignes.</small></span><span className="label-dot" /></div>

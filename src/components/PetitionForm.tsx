@@ -85,6 +85,7 @@ export default function PetitionForm({ onSuccess, onPrivacy, onShare, notify, tu
       <div className="signature-card signature-success" role="status" aria-live="polite">
         <div className="form-eyebrow"><CheckCheck size={17} /> SIGNATURE ENREGISTRÉE</div>
         <div className="success-body">
+          <div className="stamp" aria-hidden="true">Signé</div>
           <div className="success-check"><Check size={42} strokeWidth={1.7} /></div>
           <h3>Merci, {success.firstName} !<br /><span>Votre voix compte.</span></h3>
           <p>{success.count === 1 ? <>Vous êtes la <strong>première personne à soutenir</strong> cette pétition.</> : <>Vous faites maintenant partie des <strong>{success.count.toLocaleString('fr-FR')} personnes qui soutiennent</strong> la mobilisation.</>}</p>
