@@ -43,8 +43,8 @@ try {
   await page.evaluate(() => document.fonts.ready)
   assert.match(await page.title(), /Étudier\. Dignement\./)
   assert.match(await page.locator('h1').innerText(), /ÉTUDIER\.\nDIGNEMENT\./)
-  assert.equal(await page.locator('.priority-card').count(), 7)
-  passed('La page, les sept priorités et les polices locales se chargent en production')
+  assert.equal(await page.locator('.priority-card').count(), 9)
+  passed('La page, les neuf priorités et les polices locales se chargent en production')
 
   const scan = async (label) => {
     const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()

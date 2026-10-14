@@ -99,6 +99,8 @@ h2 > span { color: var(--blue); }
 .priorities-grid > .reveal:nth-child(6) { transition-delay: .15s; }
 .priorities-grid > .reveal:nth-child(7) { transition-delay: .2s; }
 .priorities-grid > .reveal:nth-child(8) { transition-delay: .25s; }
+.priorities-grid > .reveal:nth-child(9) { transition-delay: .3s; }
+.priorities-grid > .reveal:nth-child(10) { transition-delay: .35s; }
 .priorities-grid > .reveal { transition: visibility .5s, transform .5s cubic-bezier(.2,.7,.3,1), box-shadow .18s ease; }
 .priorities-grid > .reveal:hover { transition-delay: 0s; }
 .priorities-grid > .reveal.is-visible:nth-child(odd) { transform: rotate(-.7deg); }

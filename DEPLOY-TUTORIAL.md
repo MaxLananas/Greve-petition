@@ -92,7 +92,7 @@ Note : `petition_stats` doit toujours avoir exactement une ligne (`id = 1`). Si 
 
 ## 4. VÉRIFIER QUE TOUT FONCTIONNE (checklist)
 
-1. La page charge avec le logo, le titre « ÉTUDIER. DIGNEMENT. », les 7 priorités, le panneau de signature.
+1. La page charge avec le logo, le titre « ÉTUDIER. DIGNEMENT. », les 9 priorités, le panneau de signature.
 2. Le compteur affiche `0`. Pas `1`, pas `—`. Le site n'invente aucune signature.
 3. Ouvrez la console (F12) : aucune erreur rouge (pas de `404` sur `.woff2`, pas de violation CSP, pas d'erreur JS).
 4. Soumettez le formulaire vide → messages d'erreur, compteur à `0`, réponse `422`.

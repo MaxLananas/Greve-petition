@@ -40,7 +40,7 @@ export interface Priority {
   title: string
   description: string
   color: 'blue' | 'navy' | 'green'
-  icon: 'meals' | 'heat' | 'cafe' | 'computer' | 'hygiene' | 'sport' | 'gate'
+  icon: 'meals' | 'heat' | 'cafe' | 'computer' | 'hygiene' | 'sport' | 'gate' | 'compass' | 'book'
   page: number
   observation: string
   demands: string[]
