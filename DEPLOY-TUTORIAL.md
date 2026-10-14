@@ -1,5 +1,7 @@
-# Déploiement du site — Leborgne en Action
-# Version : Supabase (PostgreSQL) + Cloudflare Pages — 100 % gratuit
+# Déploiement du site — Leborgne en Action (référence complète)
+# Parcours recommandé : DEPLOY-D1-RAPIDE.md (Pages + D1, 10 minutes, sans Supabase).
+# Ce document reste la référence détaillée : Supabase en alternative, export,
+# sécurité, limites, dépannage.
 # Dépôt : MaxLananas/Greve-petition — branche de production : main
 # Aucune donnée réelle, aucun secret, aucun fichier privé dans le dépôt.
 

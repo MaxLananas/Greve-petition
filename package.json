@@ -15,8 +15,11 @@
     "test:browser": "npm run build && node scripts/check-browser.mjs",
     "check": "tsc -b",
     "cloudflare:build": "node scripts/build-cloudflare.mjs",
-    "cloudflare:db:local": "wrangler d1 execute DB --local --config wrangler.local.jsonc --file migrations/0001_signatures.sql",
-    "cloudflare:dev": "npm run build && npm run cloudflare:db:local && wrangler pages dev dist --config wrangler.local.jsonc --ip 0.0.0.0 --port 3000",
+    "cloudflare:db:local": "wrangler d1 execute DB --local --file migrations/0001_signatures.sql",
+    "cloudflare:db:create": "wrangler d1 create leborgne-petition",
+    "cloudflare:db:migrate": "wrangler d1 execute leborgne-petition --remote --file migrations/0001_signatures.sql",
+    "cloudflare:db:check": "wrangler d1 execute leborgne-petition --remote --command \"SELECT * FROM petition_stats;\"",
+    "cloudflare:dev": "npm run build && npm run cloudflare:db:local && wrangler pages dev dist --ip 0.0.0.0 --port 3000",
     "test:cloudflare": "npm run cloudflare:build && node --test tests/cloudflare-runtime.test.mjs",
     "export:signatures": "node --env-file-if-exists=.env scripts/export-signatures.mjs"
   },

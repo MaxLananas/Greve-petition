@@ -114,25 +114,26 @@ Les tests navigateur utilisent un serveur de production local et **une base en m
 
 Les documents initialement fournis à la racine sont conservés. Les données et les secrets ne sont pas versionnés.
 
-## Hébergement gratuit (Cloudflare Pages + Supabase)
+## Hébergement gratuit (Cloudflare Pages + D1)
 
-En production, le site est une page statique sur Cloudflare Pages et les signatures sont enregistrées dans Supabase (PostgreSQL) via les Pages Functions. Aucune dépense ni abonnement n’est requis sur les plans gratuits.
+En production, le site est une page statique sur Cloudflare Pages et les signatures sont enregistrées dans une base D1 (SQLite Cloudflare) via les Pages Functions. Tout est chez Cloudflare, aucun service externe requis, aucune dépense ni abonnement sur les plans gratuits.
 
-Avant le premier déploiement :
-- Dans Supabase : créez un projet → SQL Editor → exécutez `migrations/0001_signatures-postgres.sql` → relevez l’**Project URL** (`https://xxxx.supabase.co`) et la clé **`service_role`** (Project Settings → API).
-- Créez un projet Pages connecté au dépôt (branche `main`), commande `npm run build`, dossier `dist`, Node 22.
-- Dans Pages → Settings → Environment Variables (Production), renseignez : `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (secret chiffré), `CONTACT_EMAIL`, `PUBLIC_URL=https://...`, `ADMIN_TOKEN` (≥ 32 caractères, secret chiffré), `SIGNATURE_GOAL` (optionnel), `SIGNATURE_RATE_SECRET` (aléatoire, recommandé), `TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY` (optionnels ; le site fonctionne sans, mais avec il devient plus difficile à automatiser).
-- Redéployez, puis vérifiez `https://<projet>.pages.dev/api/health` : `{"status":"ok","storage":"supabase",...}`.
+**Déploiement express (10 minutes) : suivez `DEPLOY-D1-RAPIDE.md`** — résumé :
+- `npx wrangler login`, `npm run cloudflare:db:create`, `npm run cloudflare:db:migrate`, `npm run cloudflare:db:check`.
+- Projet Pages connecté au dépôt (branche `main`), build `npm run build`, dossier `dist`, Node 22.
+- Relier la base : Pages → Settings → Functions → D1 binding nommé exactement `DB`.
+- Variables (Production) : `CONTACT_EMAIL`, `PUBLIC_URL=https://...`, `ADMIN_TOKEN` (≥ 32 caractères, chiffré), `SIGNATURE_GOAL` (optionnel), `SIGNATURE_RATE_SECRET` (recommandé), `TURNSTILE_*` (optionnels, les deux ensemble ou aucun).
+- Redéployer, puis vérifier `https://<projet>.pages.dev/api/health` : `{"status":"ok","storage":"d1",...}`.
 - Pour l’export : `npm run export:signatures -- data/export.csv`, avec `PUBLIC_URL` (HTTPS) et `ADMIN_TOKEN` dans un `.env` privé. Le fichier produit doit rester privé et ne jamais être publié.
 
-En cas de dépassement du quota gratuit de Supabase : l’API renvoie un code `FREE_QUOTA_REACHED` (503) et la signature n’est pas enregistrée ; aucune donnée partielle n’est conservée. Réessayez après le renouvellement du quota ; il n’est pas nécessaire de payer.
+En cas de dépassement du quota gratuit de D1 : l’API renvoie un code `FREE_QUOTA_REACHED` (503) et la signature n’est pas enregistrée ; aucune donnée partielle n’est conservée. Réessayez après le renouvellement du quota.
 
-Le tutoriel détaillé pas-à-pas (avec dépannage des codes d’erreur) est dans `DEPLOY-TUTORIAL.md`. Le développement local peut utiliser `npm run dev` (SQLite) ou `npm run cloudflare:dev` (D1 local).
+Le développement local peut utiliser `npm run dev` (SQLite) ou `npm run cloudflare:dev` (D1 locale). Supabase reste supporté en alternative (l’API détecte automatiquement le backend ; voir `DEPLOY-TUTORIAL.md`).
 
 ### Les limites réelles du plan gratuit
 
 - **Pages** : trafic public inclus ; 500 builds/mois ; 100 000 requêtes Functions/jour. Une pétition locale ne dépassera pas cette limite, sauf campagne massive.
-- **Supabase** : 500 Mo de base, 2 Go/mois de sortie. Largement suffisant pour des signatures texte.
+- **D1** : 5 Go de stockage, 5 millions de lignes lues/jour, 10 bases. Largement suffisant pour une pétition (quelques Ko par signature).
 - **Pas de nom de domaine obligatoire** : le lien `https://<projet>.pages.dev` fonctionne directement.
 
 Le site reste visible même si la base atteint ses limites, car l’interface est statique. Seule la signature devient temporairement impossible jusqu’au renouvellement du quota.
