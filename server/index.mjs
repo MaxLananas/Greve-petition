@@ -15,6 +15,8 @@ const { app, db } = createApp({
   trustProxy: Number(process.env.TRUST_PROXY || 0),
   production,
   writeLimit: Number(process.env.SIGNATURE_RATE_LIMIT || 60),
+  turnstileSiteKey: process.env.TURNSTILE_SITE_KEY || '',
+  turnstileSecretKey: process.env.TURNSTILE_SECRET_KEY || '',
 })
 const server = createServer(app)
 let vite

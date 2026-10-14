@@ -103,7 +103,7 @@ test('D1 : limite réelle de taille, JSON invalide et mauvais Content-Type', asy
 test('D1 : absence de liaison ou de migration = erreur, jamais faux compteur ou succès', async (t) => {
   const missing = await handleApi(new Request(base + '/api/petition'), {})
   assert.equal(missing.status, 503)
-  assert.equal((await missing.json()).code, 'D1_NOT_CONFIGURED')
+  assert.equal((await missing.json()).code, 'DB_NOT_CONFIGURED')
   const { call } = setup(t, { initialize: false })
   const uninitialized = await call('/api/signatures', valid())
   assert.equal(uninitialized.status, 503)

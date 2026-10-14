@@ -19,7 +19,11 @@ export function createApp({
   rateLimits = true,
   writeLimit = 60,
   production = false,
+  turnstileSiteKey = '',
+  turnstileSecretKey = '',
 } = {}) {
+  const turnstileSite = String(turnstileSiteKey || '').trim()
+  const turnstileSecret = String(turnstileSecretKey || '').trim()
   if (databasePath !== ':memory:') {
     mkdirSync(dirname(databasePath), { recursive: true, mode: 0o700 })
   }
@@ -53,7 +57,7 @@ export function createApp({
       'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
     })
     if (production) {
-      res.set('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'")
+      res.set('Content-Security-Policy', "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://challenges.cloudflare.com; frame-src 'self' https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self'")
     }
     next()
   })
@@ -98,11 +102,46 @@ export function createApp({
       publicCount,
       supporters,
       contactEmail: validEmail(contactEmail) ? contactEmail : null,
+      turnstileSiteKey: turnstileSite || null,
     })
   })
 
-  app.post('/api/signatures', writeLimiter, (req, res) => {
-    if (req.get('sec-fetch-site') === 'cross-site') {
+  const forbiddenOrigin = (req) => {
+    if (req.get('sec-fetch-site') === 'cross-site') return true
+    const origin = req.get('origin')
+    if (!origin) return false
+    try {
+      return new URL(origin).origin !== `${req.protocol}://${req.get('host')}`
+    } catch {
+      return true
+    }
+  }
+
+  const checkTurnstile = async (req, body) => {
+    if (!turnstileSite && !turnstileSecret) return null
+    if (!turnstileSite || !turnstileSecret) {
+      return { status: 503, data: { code: 'TURNSTILE_NOT_CONFIGURED', error: 'La vérification anti-robot est incomplète côté serveur. Merci de réessayer plus tard.' } }
+    }
+    const token = typeof body.turnstileToken === 'string' ? body.turnstileToken.trim() : ''
+    if (!token) {
+      return { status: 422, data: { error: 'Validez la vérification anti-robot avant de signer.', fields: { turnstile: 'Validez la vérification anti-robot avant de signer.' } } }
+    }
+    try {
+      const verification = await (await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+        method: 'POST',
+        body: new URLSearchParams({ secret: turnstileSecret, response: token }),
+      })).json()
+      if (!verification?.success || verification.action !== 'sign_petition' || verification.hostname !== req.hostname) {
+        return { status: 422, data: { error: 'La vérification anti-robot a échoué. Merci de réessayer.', fields: { turnstile: 'La vérification anti-robot a échoué. Merci de réessayer.' } } }
+      }
+    } catch {
+      return { status: 503, data: { error: 'La vérification anti-robot est momentanément indisponible. Merci de réessayer.' } }
+    }
+    return null
+  }
+
+  app.post('/api/signatures', writeLimiter, async (req, res) => {
+    if (forbiddenOrigin(req)) {
       return res.status(403).json({ error: 'Merci de signer depuis le site de la pétition.' })
     }
     const body = req.body ?? {}
@@ -111,6 +150,8 @@ export function createApp({
     if (Object.keys(fields).length) {
       return res.status(422).json({ error: 'Vérifiez les informations du formulaire.', fields })
     }
+    const turnstile = await checkTurnstile(req, body)
+    if (turnstile) return res.status(turnstile.status).json(turnstile.data)
 
     const withdrawalCode = randomBytes(24).toString('base64url')
     try {
@@ -135,7 +176,7 @@ export function createApp({
   })
 
   app.post('/api/signatures/withdraw', writeLimiter, (req, res) => {
-    if (req.get('sec-fetch-site') === 'cross-site') {
+    if (forbiddenOrigin(req)) {
       return res.status(403).json({ error: 'Merci de faire cette demande depuis le site de la pétition.' })
     }
     const code = cleanText(req.body?.withdrawalCode)

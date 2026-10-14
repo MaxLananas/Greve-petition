@@ -1,0 +1,18 @@
+{
+  // Configuration LOCALE uniquement : jamais de secrets ici.
+  // La production (Cloudflare Pages + Supabase) se configure dans le tableau
+  // de bord Pages : Settings → Environment Variables (voir DEPLOY-TUTORIAL.md).
+  "$schema": "https://developers.cloudflare.com/schemas/wrangler.jsonc",
+  "name": "leborgne-petition-local",
+  "compatibility_date": "2026-10-01",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "leborgne-petition-local",
+      "database_id": "local-dev-only"
+    }
+  ],
+  "vars": {
+    "SIGNATURE_GOAL": "1000"
+  }
+}
