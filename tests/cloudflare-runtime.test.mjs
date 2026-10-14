@@ -26,7 +26,7 @@ const valid = (overrides = {}) => ({
 
 async function setup(t, bindings = {}) {
   const runtime = await createCloudflareRuntime({
-    bindings: { SIGNATURE_GOAL: '1000', CONTACT_EMAIL: '', ...bindings },
+    bindings: { SIGNATURE_GOAL: '1000', ...bindings },
   })
   t.after(runtime.close)
   const call = async (path, body, headers = {}) => {
@@ -53,7 +53,6 @@ test('Runtime Cloudflare : santé, compteur et parcours complet de signature', a
     goal: 1000,
     publicCount: 0,
     supporters: [],
-    contactEmail: null,
     turnstileSiteKey: null,
   })
   assert.equal(empty.response.headers.get('cache-control'), 'no-store')

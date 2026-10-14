@@ -11,7 +11,7 @@
 
 1. Ce site permet de signer une pétition. Les signatures sont enregistrées dans une base Supabase (PostgreSQL). Elles ne sont pas stockées dans le dépôt Git, ni dans `dist/`, ni dans le navigateur (hors état local React).
 2. Ce tutoriel ne remplace pas un audit légal ou un audit d'accessibilité complet. Les tests automatiques (`npm test` : 52 tests API, `npm run test:cloudflare` : bundle réel, `npm run test:browser` : 21 vérifications navigateur avec axe) couvrent le fonctionnement technique. Une revue manuelle reste utile avant diffusion publique, surtout si la campagne devient très visible.
-3. Avant de diffuser publiquement, vous devez configurer : un contact réel (`CONTACT_EMAIL`), une URL publique en HTTPS (`PUBLIC_URL`), un secret pour l'export (`ADMIN_TOKEN` ≥ 32 caractères), et vérifier que vous êtes le responsable du traitement des données personnelles (mention légale, politique de confidentialité, gestion des mineurs si applicable).
+3. Avant de diffuser publiquement, vous devez configurer : une URL publique en HTTPS (`PUBLIC_URL`), un secret pour l'export (`ADMIN_TOKEN` ≥ 32 caractères), et vérifier que vous êtes le responsable du traitement des données personnelles (mention légale, politique de confidentialité, gestion des mineurs si applicable).
 4. Le site reste visuellement fonctionnel même si la base atteint ses quotas gratuits (le formulaire renvoie alors 503, aucune signature n'est enregistrée, aucune donnée n'est perdue).
 5. Le fichier `public/assets/partage.png` est le visuel de partage (1200×630). Il est inclus dans le dépôt et dans le build.
 
@@ -70,7 +70,6 @@ Le build installe les dépendances, vérifie TypeScript (`tsc -b`), puis compile
 - `SUPABASE_URL` = le Project URL de l'étape 3 (`https://xxxx.supabase.co`).
 - `SUPABASE_SERVICE_ROLE_KEY` = la clé `service_role` (cliquez sur « Encrypt » / secret chiffré).
 - `PUBLIC_URL` = `https://votre-projet.pages.dev` (ou votre domaine personnalisé). Utilisée pour les métadonnées de partage (`og:url`, `canonical`).
-- `CONTACT_EMAIL` = votre adresse réelle (affichée dans le pied de page si valide). Ne mettez pas d'adresse temporaire : le site doit indiquer un responsable.
 - `ADMIN_TOKEN` = au moins 32 caractères aléatoires (secret chiffré). Générez avec `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`. Protège l'export privé CSV. Sans lui, l'export renvoie `503`.
 - `SIGNATURE_GOAL` = `1000` (optionnel, valeur par défaut). Simple objectif visuel.
 - `SIGNATURE_RATE_SECRET` = chaîne aléatoire (recommandé, secret chiffré). Sert à pseudonymiser les IP pour la limitation anti-abus.
@@ -202,7 +201,7 @@ Vérifié par `npm test`, `npm run test:cloudflare` et `npm run test:browser` :
 
 ## 9. CE QUE LE SITE NE FAIT PAS (et ne doit pas faire)
 
-- Il n'envoie pas d'e-mails (pas de SMTP, pas de newsletter). Contact via `CONTACT_EMAIL` uniquement.
+- Il n'envoie pas d'e-mails (pas de SMTP, pas de newsletter). L'adresse de contact est affichée dans le pied de page.
 - Il n'utilise pas de cookies ou outils de suivi (pas d'analytics, pas de pixel). Rien n'est envoyé au serveur sans action explicite.
 - Il ne collecte ni téléphone, ni date de naissance. Si la campagne s'adresse à des mineurs, vérifiez le cadre légal applicable (mention de consentement parental éventuelle — non gérée automatiquement).
 - Pas de chatbot, commentaires, forum ou paiement : c'est une pétition de soutien, pas une collecte.

@@ -201,11 +201,6 @@ async function checkTurnstile(request, env, body, fetchFn) {
   return null
 }
 
-function contactEmail(env) {
-  const contact = cleanText(env.CONTACT_EMAIL || '')
-  return validEmail(contact) ? contact : null
-}
-
 function turnstileSiteKey(env) {
   const siteKey = (env.TURNSTILE_SITE_KEY ?? '').trim()
   return siteKey || null
@@ -361,7 +356,6 @@ async function handleD1(request, path, env, db, { nowMs, fetchFn }) {
         goal,
         publicCount: Number(stats.publicTotal ?? 0),
         supporters: (supporters.results ?? []).map(toSupporter),
-        contactEmail: contactEmail(env),
         turnstileSiteKey: turnstileSiteKey(env),
       })
     } catch (error) {
@@ -682,7 +676,6 @@ async function handleSupabase(request, path, env, sb, { nowMs, fetchFn }) {
       goal,
       publicCount: Number(stats.stats.public_count ?? 0),
       supporters: (Array.isArray(supporters.data) ? supporters.data : []).map(toSupporter),
-      contactEmail: contactEmail(env),
       turnstileSiteKey: turnstileSiteKey(env),
     })
   }

@@ -10,7 +10,6 @@ const port = Number(process.env.PORT || 3000)
 const { app, db } = createApp({
   databasePath: process.env.DATABASE_PATH || './data/signatures.sqlite',
   goal: Number(process.env.SIGNATURE_GOAL || 1000),
-  contactEmail: process.env.CONTACT_EMAIL || '',
   adminToken: process.env.ADMIN_TOKEN || '',
   trustProxy: Number(process.env.TRUST_PROXY || 0),
   production,

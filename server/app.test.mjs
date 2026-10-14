@@ -38,7 +38,6 @@ test('Le compteur initial est réel, nul et sans soutiens fictifs', async (t) =>
   assert.equal(data.publicCount, 0)
   assert.equal(data.goal, 1000)
   assert.deepEqual(data.supporters, [])
-  assert.equal(data.contactEmail, null)
 })
 
 test('Signature enregistrée avec consentement et référence de retrait privée', async (t) => {

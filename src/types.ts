@@ -12,7 +12,6 @@ export interface PetitionData {
   goal: number
   publicCount: number
   supporters: Supporter[]
-  contactEmail: string | null
   turnstileSiteKey?: string | null
 }
 

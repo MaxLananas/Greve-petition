@@ -76,7 +76,6 @@ Puis vérifiez avec : `SELECT * FROM petition_stats;` → **une ligne** `1 | 0 |
 
 | Variable | Valeur |
 |---|---|
-| `CONTACT_EMAIL` | Votre adresse réelle (affichée en bas du site) |
 | `PUBLIC_URL` | `https://votre-projet.pages.dev` (sans slash final) |
 | `ADMIN_TOKEN` | 32 caractères aléatoires minimum (cliquez « Encrypt »). Générez avec : `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
 | `SIGNATURE_GOAL` | `1000` (optionnel) |

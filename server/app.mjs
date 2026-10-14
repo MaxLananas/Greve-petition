@@ -5,7 +5,7 @@ import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
 import { mkdirSync, chmodSync } from 'node:fs'
 import { dirname } from 'node:path'
 
-import { CONSENT_VERSION, cleanText, validEmail, csvCell, validateSignature } from '../shared/petition.mjs'
+import { CONSENT_VERSION, cleanText, csvCell, validateSignature } from '../shared/petition.mjs'
 export { CONSENT_VERSION, ROLES } from '../shared/petition.mjs'
 
 const hash = (value) => createHash('sha256').update(value).digest('hex')
@@ -13,7 +13,6 @@ const hash = (value) => createHash('sha256').update(value).digest('hex')
 export function createApp({
   databasePath = './data/signatures.sqlite',
   goal = 1000,
-  contactEmail = '',
   adminToken = '',
   trustProxy = 0,
   rateLimits = true,
@@ -101,7 +100,6 @@ export function createApp({
       goal: milestone,
       publicCount,
       supporters,
-      contactEmail: validEmail(contactEmail) ? contactEmail : null,
       turnstileSiteKey: turnstileSite || null,
     })
   })

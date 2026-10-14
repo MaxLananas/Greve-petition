@@ -191,7 +191,7 @@ test('Supabase : sans configuration, erreur explicite et jamais de compteur inve
 })
 
 test('Supabase : compteur nul, sans cache, sans CORS et sans soutien inventé', async (t) => {
-  const { call } = setup(t, { env: { SIGNATURE_GOAL: '500', CONTACT_EMAIL: 'collectif@example.test' } })
+  const { call } = setup(t, { env: { SIGNATURE_GOAL: '500' } })
   const { data, status, response } = await call('/api/petition')
   assert.equal(status, 200)
   assert.deepEqual(data, {
@@ -199,7 +199,6 @@ test('Supabase : compteur nul, sans cache, sans CORS et sans soutien inventé', 
     goal: 500,
     publicCount: 0,
     supporters: [],
-    contactEmail: 'collectif@example.test',
     turnstileSiteKey: null,
   })
   assert.equal(response.headers.get('cache-control'), 'no-store')

@@ -60,7 +60,6 @@ Voir `.env.example` :
 | `PORT` | Port HTTP, 3000 par défaut. |
 | `DATABASE_PATH` | Chemin privé de la base, `./data/signatures.sqlite` par défaut. |
 | `SIGNATURE_GOAL` | Premier palier visuel, 1 000 par défaut ; **ce n’est pas une cible indiquée dans le PDF** et il peut être ajusté par l’équipe. |
-| `CONTACT_EMAIL` | Adresse réelle du collectif responsable. Elle apparaît dans la confidentialité et le pied de page quand elle est renseignée. |
 | `PUBLIC_URL` | Origine publique HTTPS pour les métadonnées de partage et le lien canonique. |
 | `TRUST_PROXY` | Nombre de reverse proxies de confiance, 0 par défaut. À adapter à la chaîne réelle d’hébergement, jamais `true` sans contrôle. |
 | `SIGNATURE_RATE_LIMIT` | Envois autorisés par IP sur dix minutes, 60 par défaut. À augmenter si de nombreux élèves partagent la même connexion. |
@@ -122,7 +121,7 @@ En production, le site est une page statique sur Cloudflare Pages et les signatu
 - `npx wrangler login`, `npm run cloudflare:db:create`, `npm run cloudflare:db:migrate`, `npm run cloudflare:db:check`.
 - Projet Pages connecté au dépôt (branche `main`), build `npm run build`, dossier `dist`, Node 22.
 - Relier la base : Pages → Settings → Functions → D1 binding nommé exactement `DB`.
-- Variables (Production) : `CONTACT_EMAIL`, `PUBLIC_URL=https://...`, `ADMIN_TOKEN` (≥ 32 caractères, chiffré), `SIGNATURE_GOAL` (optionnel), `SIGNATURE_RATE_SECRET` (recommandé), `TURNSTILE_*` (optionnels, les deux ensemble ou aucun).
+- Variables (Production) : `PUBLIC_URL=https://...`, `ADMIN_TOKEN` (≥ 32 caractères, chiffré), `SIGNATURE_GOAL` (optionnel), `SIGNATURE_RATE_SECRET` (recommandé), `TURNSTILE_*` (optionnels, les deux ensemble ou aucun).
 - Redéployer, puis vérifier `https://<projet>.pages.dev/api/health` : `{"status":"ok","storage":"d1",...}`.
 - Pour l’export : `npm run export:signatures -- data/export.csv`, avec `PUBLIC_URL` (HTTPS) et `ADMIN_TOKEN` dans un `.env` privé. Le fichier produit doit rester privé et ne jamais être publié.
 

@@ -27,10 +27,10 @@ function setup(t, options = {}) {
 }
 
 test('D1 : compteur nul, réponses non mises en cache et aucun soutien inventé', async (t) => {
-  const { call } = setup(t, { env: { SIGNATURE_GOAL: '500', CONTACT_EMAIL: 'collectif@example.test' } })
+  const { call } = setup(t, { env: { SIGNATURE_GOAL: '500' } })
   const { data, status, response } = await call('/api/petition')
   assert.equal(status, 200)
-  assert.deepEqual(data, { count: 0, goal: 500, publicCount: 0, supporters: [], contactEmail: 'collectif@example.test', turnstileSiteKey: null })
+  assert.deepEqual(data, { count: 0, goal: 500, publicCount: 0, supporters: [], turnstileSiteKey: null })
   assert.equal(response.headers.get('cache-control'), 'no-store')
   assert.equal(response.headers.get('access-control-allow-origin'), null)
   assert.equal((await call('/api/health')).data.storage, 'd1')
