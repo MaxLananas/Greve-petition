@@ -12,6 +12,7 @@ export interface PetitionData {
   goal: number
   publicCount: number
   supporters: Supporter[]
+  roleCounts: Record<string, number>
   turnstileSiteKey?: string | null
 }
 

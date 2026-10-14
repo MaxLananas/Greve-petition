@@ -73,17 +73,22 @@ function createFakeSupabase({ missingTable = false, quotaOn = null, statsRow = t
           const wanted = Number(params.get('is_public').slice(3))
           rows = rows.filter((row) => row.is_public === wanted)
         }
+        if (params.get('role')?.startsWith('eq.')) {
+          const wanted = params.get('role').slice(3)
+          rows = rows.filter((row) => row.role === wanted)
+        }
         if (params.get('id')?.startsWith('gt.')) {
           const after = Number(params.get('id').slice(3))
           rows = rows.filter((row) => row.id > after)
         }
+        const total = rows.length
         const order = params.get('order') ?? 'id.asc'
         rows.sort((a, b) => (order === 'id.desc' ? b.id - a.id : a.id - b.id))
         const limit = params.get('limit')
         if (limit) rows = rows.slice(0, Number(limit))
         const headers = {}
         if ((init.headers?.Prefer ?? '').includes('count=exact')) {
-          headers['Content-Range'] = `0-${Math.max(0, rows.length - 1)}/${state.signatures.length}`
+          headers['Content-Range'] = `0-${Math.max(0, rows.length - 1)}/${total}`
           headers['Content-Type'] = 'application/json'
           return new Response(JSON.stringify(rows), { status: 200, headers })
         }
@@ -199,6 +204,7 @@ test('Supabase : compteur nul, sans cache, sans CORS et sans soutien inventé', 
     goal: 500,
     publicCount: 0,
     supporters: [],
+    roleCounts: { eleve: 0, personnel: 0, parent: 0, ancien: 0, soutien: 0 },
     turnstileSiteKey: null,
   })
   assert.equal(response.headers.get('cache-control'), 'no-store')
@@ -484,4 +490,34 @@ test('Supabase : la clé alias SUPABASE_SERVICE_KEY est acceptée', async () => 
   )
   assert.equal(response.status, 200)
   assert.equal((await response.json()).storage, 'supabase')
+})
+
+test('Supabase : chaque catégorie affiche ses 50 derniers soutiens avec son compteur', async (t) => {
+  const { call } = setup(t)
+  for (let i = 0; i < 3; i++) {
+    const signed = await call('/api/signatures', valid({ firstName: `Staf${i}`, email: `staf${i}@example.test`, role: 'personnel', isPublic: true }))
+    assert.equal(signed.status, 201)
+  }
+  for (let i = 0; i < 51; i++) {
+    const signed = await call('/api/signatures', valid({ firstName: `Eleve${i}`, email: `eleve${i}@example.test`, role: 'eleve', isPublic: true }))
+    assert.equal(signed.status, 201)
+  }
+  await call('/api/signatures', valid({ firstName: 'Prive', email: 'prive@example.test', role: 'parent', isPublic: false }))
+  const staff = await call('/api/supporters?role=personnel')
+  assert.equal(staff.status, 200)
+  assert.equal(staff.data.supporters.length, 3)
+  assert.equal(staff.data.total, 3)
+  const pupils = await call('/api/supporters?role=eleve')
+  assert.equal(pupils.data.supporters.length, 50)
+  assert.equal(pupils.data.total, 51)
+  assert.equal(pupils.data.supporters[0].firstName, 'Eleve50')
+  const all = await call('/api/supporters')
+  assert.equal(all.data.supporters.length, 50)
+  assert.equal(all.data.total, 54)
+  const parents = await call('/api/supporters?role=parent')
+  assert.equal(parents.data.supporters.length, 0)
+  assert.equal(parents.data.total, 0)
+  assert.equal((await call('/api/supporters?role=admin')).status, 422)
+  const petition = await call('/api/petition')
+  assert.deepEqual(petition.data.roleCounts, { eleve: 51, personnel: 3, parent: 0, ancien: 0, soutien: 0 })
 })

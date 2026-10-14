@@ -33,7 +33,7 @@
 - Créez un nouveau snippet (« New snippet » en haut à droite).
 - Copiez intégralement le contenu de `migrations/0001_signatures-postgres.sql` (présent dans ce dépôt) :
   - la table `signatures` (prénom, nom, e-mail normalisé, rôle, message privé, consentement, date, code de retrait haché) ;
-  - un index partiel `signatures_public_recent` pour lire les 50 derniers soutiens sans scanner toute la base ;
+  - un index partiel `signatures_public_recent` pour lire les 50 derniers soutiens de chaque catégorie sans scanner toute la base ;
   - la table `petition_stats` avec le compteur atomique (`total_count`, `public_count`) ;
   - les déclencheurs PostgreSQL qui maintiennent le compteur automatiquement ;
   - la table `request_limits` pour la limitation anti-abus (IP pseudonymisée par HMAC, jamais en clair) ;

@@ -53,6 +53,7 @@ test('Runtime Cloudflare : santé, compteur et parcours complet de signature', a
     goal: 1000,
     publicCount: 0,
     supporters: [],
+    roleCounts: { eleve: 0, personnel: 0, parent: 0, ancien: 0, soutien: 0 },
     turnstileSiteKey: null,
   })
   assert.equal(empty.response.headers.get('cache-control'), 'no-store')

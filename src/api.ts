@@ -1,4 +1,4 @@
-import type { PetitionData, SignatureInput, SignatureResult } from './types'
+import type { PetitionData, SignatureInput, SignatureResult, Supporter } from './types'
 
 export class ApiError extends Error {
   fields: Record<string, string>
@@ -25,6 +25,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const getPetition = (signal?: AbortSignal) => request<PetitionData>('/api/petition', { signal })
+export const getSupporters = (role: string) => request<{ supporters: Supporter[]; total: number }>(`/api/supporters${role ? `?role=${encodeURIComponent(role)}` : ''}`)
 export const signPetition = (input: SignatureInput) => request<SignatureResult>('/api/signatures', {
   method: 'POST', body: JSON.stringify(input),
 })

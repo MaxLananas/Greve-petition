@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ArrowDown, ArrowDownToLine, ArrowRight, ArrowUpRight, BookOpen, Check, CheckCircle2, ChevronDown, Coffee, Compass, DoorOpen, Dumbbell, FileText, GraduationCap, HeartHandshake, LockKeyhole, MapPin, Menu, Minus, Monitor, Plus, Share2, ShieldCheck, Sparkles, ThermometerSun, UsersRound, Utensils, X } from 'lucide-react'
-import { copyText, getPetition } from './api'
+import { copyText, getPetition, getSupporters } from './api'
 import { FAQS, PDF_URL, PRIORITIES, ROLE_LABELS } from './data'
 import { Brand, BrandShapes, CampaignPoster, ColorStripe } from './components/Brand'
 import Dialog from './components/Dialog'
 import PetitionForm from './components/PetitionForm'
 import { PrivacyContent, WithdrawForm } from './components/Privacy'
-import type { PetitionData, Priority, Role, SignatureResult } from './types'
+import type { PetitionData, Priority, Role, SignatureResult, Supporter } from './types'
 
 const formatNumber = (number: number) => number.toLocaleString('fr-FR')
 const ICONS = { meals: Utensils, heat: ThermometerSun, cafe: Coffee, computer: Monitor, hygiene: Sparkles, sport: Dumbbell, gate: DoorOpen, compass: Compass, book: BookOpen }
@@ -15,6 +15,7 @@ const FILTERS: { key: 'all' | Role; label: string }[] = [
   { key: 'eleve', label: 'Lycéens' },
   { key: 'personnel', label: 'Personnels' },
   { key: 'parent', label: 'Parents' },
+  { key: 'ancien', label: 'Anciens' },
   { key: 'soutien', label: 'Citoyens' },
 ]
 
@@ -52,6 +53,9 @@ export default function App() {
   const [faqOpen, setFaqOpen] = useState<number | null>(0)
   const [supportFilter, setSupportFilter] = useState<'all' | Role>('all')
   const [supportLimit, setSupportLimit] = useState(8)
+  const [roleSupporters, setRoleSupporters] = useState<Supporter[] | null>(null)
+  const [rolePending, setRolePending] = useState(false)
+  const [roleError, setRoleError] = useState(false)
   const [toast, setToast] = useState('')
   const [signed, setSigned] = useState(false)
   const [formEpoch, setFormEpoch] = useState(0)
@@ -126,6 +130,33 @@ export default function App() {
     return () => { observer.disconnect(); clearTimeout(fallback) }
   }, [])
 
+  useEffect(() => {
+    if (supportFilter === 'all') {
+      setRoleSupporters(null)
+      setRolePending(false)
+      setRoleError(false)
+      return
+    }
+    let cancelled = false
+    setRoleSupporters(null)
+    setRolePending(true)
+    setRoleError(false)
+    getSupporters(supportFilter).then(
+      (result) => {
+        if (cancelled) return
+        setRoleSupporters(result.supporters)
+        setRolePending(false)
+      },
+      () => {
+        if (cancelled) return
+        setRoleSupporters([])
+        setRolePending(false)
+        setRoleError(true)
+      },
+    )
+    return () => { cancelled = true }
+  }, [supportFilter, data?.count, data?.publicCount])
+
   const notify = useCallback((message: string) => {
     setToast(message)
     if (toastTimeout.current) clearTimeout(toastTimeout.current)
@@ -150,7 +181,7 @@ export default function App() {
 
   function onSignature(result: SignatureResult) {
     setData((current) => current ? { ...current, count: result.count, goal: result.goal } : {
-      count: result.count, goal: result.goal, publicCount: 0, supporters: [],
+      count: result.count, goal: result.goal, publicCount: 0, supporters: [], roleCounts: { eleve: 0, personnel: 0, parent: 0, ancien: 0, soutien: 0 },
     })
     setSigned(true)
     void refresh()
@@ -163,7 +194,7 @@ export default function App() {
     void refresh()
   }
 
-  const supporters = (data?.supporters ?? []).filter((supporter) => supportFilter === 'all' || supporter.role === supportFilter)
+  const supporters = supportFilter === 'all' ? (data?.supporters ?? []) : (roleSupporters ?? [])
   const navLink = (id: string, label: string) => <a href={`#${id}`} className={activeNav === id ? 'active' : ''} onClick={() => { setMenuOpen(false); setActiveNav(id) }}>{label}</a>
 
   return (
@@ -222,8 +253,8 @@ export default function App() {
         </section>
 
         <section className="section supporters-section" id="soutiens" aria-labelledby="supporters-title">
-          <div className="container"><div className="section-heading supporters-heading" data-reveal><div><p className="eyebrow"><span>04</span> LA FORCE DU COLLECTIF</p><h2 id="supporters-title">Des voix qui se rassemblent.</h2><p className="section-description">Chaque signature renforce notre mobilisation.</p></div><button type="button" className="button button-outline" onClick={() => void share()}><Share2 size={17} /> Faire passer le mot <ArrowUpRight size={17} /></button></div><div className="supporters-toolbar" data-reveal><div className="supporter-filters" aria-label="Filtrer les soutiens par profil">{FILTERS.map((filter) => <button type="button" key={filter.key} className={supportFilter === filter.key ? 'selected' : ''} aria-pressed={supportFilter === filter.key} onClick={() => { setSupportFilter(filter.key); setSupportLimit(8) }}>{filter.label}</button>)}</div><span className="public-count"><span className="live-dot" /> {data ? formatNumber(data.count) : '—'} {data?.count === 1 ? 'signature' : 'signatures'}</span></div>
-            {supporters.length > 0 ? <><ul className="supporters-grid" data-reveal>{supporters.slice(0, supportLimit).map((supporter, index) => <li className="supporter-card" key={`${supporter.createdAt}-${index}`}><span className={`supporter-avatar avatar-${index % 4}`}>{Array.from(supporter.firstName)[0]?.toUpperCase()}</span><div><h3>{supporter.firstName} {supporter.lastInitial}.</h3><p>{ROLE_LABELS[supporter.role] ?? 'Soutien'}</p></div><time dateTime={supporter.createdAt}>{new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', timeZone: 'America/Guadeloupe' }).format(new Date(supporter.createdAt))}</time></li>)}</ul>{supporters.length > supportLimit && <button type="button" className="button button-outline load-more" onClick={() => setSupportLimit((current) => current + 8)}>Voir plus de soutiens <ChevronDown size={17} /></button>}<p className="supporters-privacy"><LockKeyhole size={13} /> Les 50 derniers soutiens ayant choisi d’apparaître. Les autres signatures sont aussi comptabilisées.</p></> : <div className="supporters-empty" data-reveal><div className="empty-illustration" aria-hidden="true"><span /><span><UsersRound size={32} strokeWidth={1.5} /></span><span /></div><div><h3>{loadError ? 'Les soutiens sont momentanément indisponibles.' : (data?.publicCount ?? 0) > 0 ? 'Pas encore de soutien public dans cette catégorie.' : (data?.count ?? 0) > 0 ? 'Des voix réunies, en toute discrétion.' : 'La première voix pourrait être la vôtre.'}</h3><p>{loadError ? 'Réessayez dans quelques instants pour afficher le compteur et les soutiens.' : (data?.count ?? 0) > 0 ? 'L’affichage public est facultatif. Chaque signature compte, visible ou non.' : 'La mobilisation commence avec nous. Ajoutez votre voix au collectif.'}</p></div><a className="text-link" href="#signer">Je rejoins le mouvement <ArrowUpRight size={17} /></a></div>}
+          <div className="container"><div className="section-heading supporters-heading" data-reveal><div><p className="eyebrow"><span>04</span> LA FORCE DU COLLECTIF</p><h2 id="supporters-title">Des voix qui se rassemblent.</h2><p className="section-description">Chaque signature renforce notre mobilisation.</p></div><button type="button" className="button button-outline" onClick={() => void share()}><Share2 size={17} /> Faire passer le mot <ArrowUpRight size={17} /></button></div><div className="supporters-toolbar" data-reveal><div className="supporter-filters" aria-label="Filtrer les soutiens par profil">{FILTERS.map((filter) => <button type="button" key={filter.key} className={supportFilter === filter.key ? 'selected' : ''} aria-pressed={supportFilter === filter.key} onClick={() => { setSupportFilter(filter.key); setSupportLimit(8) }}>{filter.label}{data ? ` (${filter.key === 'all' ? data.publicCount : (data.roleCounts[filter.key] ?? 0)})` : ''}</button>)}</div><span className="public-count"><span className="live-dot" /> {data ? formatNumber(data.count) : '—'} {data?.count === 1 ? 'signature' : 'signatures'}</span></div>
+            {supporters.length > 0 ? <><ul className="supporters-grid" data-reveal>{supporters.slice(0, supportLimit).map((supporter, index) => <li className="supporter-card" key={`${supporter.createdAt}-${index}`}><span className={`supporter-avatar avatar-${index % 4}`}>{Array.from(supporter.firstName)[0]?.toUpperCase()}</span><div><h3>{supporter.firstName} {supporter.lastInitial}.</h3><p>{ROLE_LABELS[supporter.role] ?? 'Soutien'}</p></div><time dateTime={supporter.createdAt}>{new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', timeZone: 'America/Guadeloupe' }).format(new Date(supporter.createdAt))}</time></li>)}</ul>{supporters.length > supportLimit && <button type="button" className="button button-outline load-more" onClick={() => setSupportLimit((current) => current + 8)}>Voir plus de soutiens <ChevronDown size={17} /></button>}<p className="supporters-privacy"><LockKeyhole size={13} /> Les 50 derniers soutiens de chaque catégorie ayant choisi d’apparaître. Les autres signatures sont aussi comptabilisées.</p></> : <div className="supporters-empty" data-reveal><div className="empty-illustration" aria-hidden="true"><span /><span><UsersRound size={32} strokeWidth={1.5} /></span><span /></div><div><h3>{rolePending ? 'Chargement des soutiens…' : (loadError || roleError) ? 'Les soutiens sont momentanément indisponibles.' : supportFilter !== 'all' && (data?.roleCounts?.[supportFilter] ?? 0) === 0 ? 'Pas encore de soutien public dans cette catégorie.' : (data?.count ?? 0) > 0 ? 'Des voix réunies, en toute discrétion.' : 'La première voix pourrait être la vôtre.'}</h3><p>{rolePending ? 'Un instant, nous récupérons les soutiens de cette catégorie.' : (loadError || roleError) ? 'Réessayez dans quelques instants pour afficher le compteur et les soutiens.' : (data?.count ?? 0) > 0 ? 'L’affichage public est facultatif. Chaque signature compte, visible ou non.' : 'La mobilisation commence avec nous. Ajoutez votre voix au collectif.'}</p></div>{!rolePending && <a className="text-link" href="#signer">Je rejoins le mouvement <ArrowUpRight size={17} /></a>}</div>}
           </div>
         </section>
 

@@ -7,6 +7,7 @@
 // - sinon 503 DB_NOT_CONFIGURED (jamais de compteur inventé).
 import {
   CONSENT_VERSION,
+  ROLES,
   cleanText,
   csvCell,
   validEmail,
@@ -206,6 +207,21 @@ function turnstileSiteKey(env) {
   return siteKey || null
 }
 
+function toRoleCounts(rows) {
+  const counts = { eleve: 0, personnel: 0, parent: 0, ancien: 0, soutien: 0 }
+  for (const row of rows) {
+    const role = String(row.role ?? '')
+    if (role in counts) counts[role] = Number(row.count ?? 0)
+  }
+  return counts
+}
+
+function sbCountedTotal(counted) {
+  const range = counted.headers?.get?.('content-range') ?? ''
+  const total = Number(range.split('/')[1])
+  return Number.isSafeInteger(total) && total >= 0 ? total : null
+}
+
 function toSupporter(row) {
   const lastName = String(row.last_name ?? row.lastName ?? '')
   return {
@@ -351,12 +367,41 @@ async function handleD1(request, path, env, db, { nowMs, fetchFn }) {
            WHERE is_public = 1 ORDER BY id DESC LIMIT 50`,
         )
         .all()
+      const counts = await db
+        .prepare(`SELECT role, COUNT(*) AS count FROM signatures WHERE is_public = 1 AND role != '' GROUP BY role`)
+        .all()
       return json({
         count: Number(stats.total ?? 0),
         goal,
         publicCount: Number(stats.publicTotal ?? 0),
         supporters: (supporters.results ?? []).map(toSupporter),
+        roleCounts: toRoleCounts(counts.results ?? []),
         turnstileSiteKey: turnstileSiteKey(env),
+      })
+    } catch (error) {
+      const kind = d1ErrorKind(error)
+      if (kind === 'QUOTA' || kind === 'NOT_INITIALIZED') return d1StorageError(kind)
+      throw error
+    }
+  }
+
+  if (path === '/api/supporters') {
+    const role = cleanText(new URL(request.url).searchParams.get('role') ?? '')
+    if (!ROLES.includes(role)) return json({ error: 'Profil invalide.' }, 422)
+    try {
+      const where = role ? 'WHERE is_public = 1 AND role = ?' : 'WHERE is_public = 1'
+      const params = role ? [role] : []
+      const supporters = await db
+        .prepare(`SELECT first_name, last_name, role, created_at FROM signatures ${where} ORDER BY id DESC LIMIT 50`)
+        .bind(...params)
+        .all()
+      const total = await db
+        .prepare(`SELECT COUNT(*) AS count FROM signatures ${where}`)
+        .bind(...params)
+        .first()
+      return json({
+        supporters: (supporters.results ?? []).map(toSupporter),
+        total: Number(total?.count ?? 0),
       })
     } catch (error) {
       const kind = d1ErrorKind(error)
@@ -585,9 +630,7 @@ async function sbCountFallback(sb, fetchFn) {
     query: { select: 'id', limit: 1 },
     prefer: 'count=exact',
   })
-  const range = counted.headers?.get?.('content-range') ?? ''
-  const total = Number(range.split('/')[1])
-  return Number.isSafeInteger(total) && total >= 0 ? total : null
+  return sbCountedTotal(counted)
 }
 
 async function sbSign(sb, fetchFn, input, goal, nowMs) {
@@ -640,6 +683,25 @@ async function sbSign(sb, fetchFn, input, goal, nowMs) {
   return json({ error: 'La signature n’a pas pu être enregistrée. Merci de réessayer.' }, 503)
 }
 
+async function sbRoleCounts(sb, fetchFn) {
+  const roles = ['eleve', 'personnel', 'parent', 'ancien', 'soutien']
+  const results = await Promise.all(
+    roles.map((role) =>
+      sbRequest(sb, fetchFn, 'signatures', {
+        query: { select: 'id', is_public: 'eq.1', role: `eq.${role}`, limit: 1 },
+        prefer: 'count=exact',
+      }),
+    ),
+  )
+  const counts = { eleve: 0, personnel: 0, parent: 0, ancien: 0, soutien: 0 }
+  for (let index = 0; index < roles.length; index++) {
+    const result = results[index]
+    if (!result.ok) return { ok: false, result }
+    counts[roles[index]] = sbCountedTotal(result) ?? 0
+  }
+  return { ok: true, counts }
+}
+
 async function handleSupabase(request, path, env, sb, { nowMs, fetchFn }) {
   const goal = positiveInteger(env.SIGNATURE_GOAL, 1000)
   const rateConfig = rateLimitConfig(env)
@@ -657,11 +719,12 @@ async function handleSupabase(request, path, env, sb, { nowMs, fetchFn }) {
   }
 
   if (path === '/api/petition') {
-    const [stats, supporters] = await Promise.all([
+    const [stats, supporters, counts] = await Promise.all([
       sbReadStats(sb, fetchFn),
       sbRequest(sb, fetchFn, 'signatures', {
         query: { select: 'first_name,last_name,role,created_at', is_public: 'eq.1', order: 'id.desc', limit: 50 },
       }),
+      sbRoleCounts(sb, fetchFn),
     ])
     if (!stats.ok) {
       const kind = sbErrorKind(stats.result)
@@ -671,12 +734,40 @@ async function handleSupabase(request, path, env, sb, { nowMs, fetchFn }) {
       return sbFailure(stats.result)
     }
     if (!supporters.ok) return sbFailure(supporters)
+    if (!counts.ok) return sbFailure(counts.result)
     return json({
       count: Number(stats.stats.total_count ?? 0),
       goal,
       publicCount: Number(stats.stats.public_count ?? 0),
       supporters: (Array.isArray(supporters.data) ? supporters.data : []).map(toSupporter),
+      roleCounts: counts.counts,
       turnstileSiteKey: turnstileSiteKey(env),
+    })
+  }
+
+  if (path === '/api/supporters') {
+    const role = cleanText(new URL(request.url).searchParams.get('role') ?? '')
+    if (!ROLES.includes(role)) return json({ error: 'Profil invalide.' }, 422)
+    const [supporters, counted] = await Promise.all([
+      sbRequest(sb, fetchFn, 'signatures', {
+        query: {
+          select: 'first_name,last_name,role,created_at',
+          is_public: 'eq.1',
+          ...(role ? { role: `eq.${role}` } : {}),
+          order: 'id.desc',
+          limit: 50,
+        },
+      }),
+      sbRequest(sb, fetchFn, 'signatures', {
+        query: { select: 'id', is_public: 'eq.1', ...(role ? { role: `eq.${role}` } : {}), limit: 1 },
+        prefer: 'count=exact',
+      }),
+    ])
+    if (!supporters.ok) return sbFailure(supporters)
+    if (!counted.ok) return sbFailure(counted)
+    return json({
+      supporters: (Array.isArray(supporters.data) ? supporters.data : []).map(toSupporter),
+      total: sbCountedTotal(counted) ?? 0,
     })
   }
 
@@ -807,6 +898,7 @@ function exportCsvResponse(rows) {
 const KNOWN_ROUTES = {
   '/api/health': 'GET',
   '/api/petition': 'GET',
+  '/api/supporters': 'GET',
   '/api/signatures': 'POST',
   '/api/signatures/withdraw': 'POST',
   '/api/admin/signatures.csv': 'GET',

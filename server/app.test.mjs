@@ -156,3 +156,33 @@ test('La base sur disque survit à la fermeture et à la réouverture', async (t
   assert.equal(second.db.prepare('SELECT COUNT(*) AS total FROM signatures').get().total, 1)
   second.db.close()
 })
+
+test('Chaque catégorie affiche ses 50 derniers soutiens avec son compteur', async (t) => {
+  const { call } = await setup(t)
+  for (let i = 0; i < 3; i++) {
+    const signed = await call('/api/signatures', valid({ firstName: `Staf${i}`, email: `staf${i}@example.test`, role: 'personnel', isPublic: true }))
+    assert.equal(signed.status, 201)
+  }
+  for (let i = 0; i < 51; i++) {
+    const signed = await call('/api/signatures', valid({ firstName: `Eleve${i}`, email: `eleve${i}@example.test`, role: 'eleve', isPublic: true }))
+    assert.equal(signed.status, 201)
+  }
+  await call('/api/signatures', valid({ firstName: 'Prive', email: 'prive@example.test', role: 'parent', isPublic: false }))
+  const staff = await call('/api/supporters?role=personnel')
+  assert.equal(staff.status, 200)
+  assert.equal(staff.data.supporters.length, 3)
+  assert.equal(staff.data.total, 3)
+  const pupils = await call('/api/supporters?role=eleve')
+  assert.equal(pupils.data.supporters.length, 50)
+  assert.equal(pupils.data.total, 51)
+  assert.equal(pupils.data.supporters[0].firstName, 'Eleve50')
+  const all = await call('/api/supporters')
+  assert.equal(all.data.supporters.length, 50)
+  assert.equal(all.data.total, 54)
+  const parents = await call('/api/supporters?role=parent')
+  assert.equal(parents.data.supporters.length, 0)
+  assert.equal(parents.data.total, 0)
+  assert.equal((await call('/api/supporters?role=admin')).status, 422)
+  const petition = await call('/api/petition')
+  assert.deepEqual(petition.data.roleCounts, { eleve: 51, personnel: 3, parent: 0, ancien: 0, soutien: 0 })
+})

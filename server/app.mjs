@@ -5,7 +5,7 @@ import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
 import { mkdirSync, chmodSync } from 'node:fs'
 import { dirname } from 'node:path'
 
-import { CONSENT_VERSION, cleanText, csvCell, validateSignature } from '../shared/petition.mjs'
+import { CONSENT_VERSION, ROLES, cleanText, csvCell, validateSignature } from '../shared/petition.mjs'
 export { CONSENT_VERSION, ROLES } from '../shared/petition.mjs'
 
 const hash = (value) => createHash('sha256').update(value).digest('hex')
@@ -88,20 +88,38 @@ export function createApp({
 
   app.get('/api/health', (_req, res) => res.json({ status: 'ok' }))
 
-  app.get('/api/petition', (_req, res) => {
-    const supporters = db.prepare(`
+  const publicSupporters = (role) => db.prepare(`
       SELECT first_name AS firstName, substr(last_name, 1, 1) AS lastInitial,
         role, created_at AS createdAt
-      FROM signatures WHERE is_public = 1 ORDER BY id DESC LIMIT 50
-    `).all()
-    const publicCount = Number(db.prepare('SELECT COUNT(*) AS count FROM signatures WHERE is_public = 1').get().count)
+      FROM signatures WHERE is_public = 1${role ? ' AND role = ?' : ''} ORDER BY id DESC LIMIT 50
+    `).all(...(role ? [role] : []))
+  const countPublicSupporters = (role) => Number(db.prepare(
+    `SELECT COUNT(*) AS count FROM signatures WHERE is_public = 1${role ? ' AND role = ?' : ''}`,
+  ).get(...(role ? [role] : [])).count)
+  const publicRoleCounts = () => {
+    const counts = { eleve: 0, personnel: 0, parent: 0, ancien: 0, soutien: 0 }
+    const rows = db.prepare('SELECT role, COUNT(*) AS count FROM signatures WHERE is_public = 1 AND role != \'\' GROUP BY role').all()
+    for (const row of rows) {
+      if (typeof row.role === 'string' && row.role in counts) counts[row.role] = Number(row.count)
+    }
+    return counts
+  }
+
+  app.get('/api/petition', (_req, res) => {
     res.json({
       count: countSignatures(),
       goal: milestone,
-      publicCount,
-      supporters,
+      publicCount: countPublicSupporters(''),
+      supporters: publicSupporters(''),
+      roleCounts: publicRoleCounts(),
       turnstileSiteKey: turnstileSite || null,
     })
+  })
+
+  app.get('/api/supporters', (req, res) => {
+    const role = cleanText(req.query.role ?? '')
+    if (!ROLES.includes(role)) return res.status(422).json({ error: 'Profil invalide.' })
+    res.json({ supporters: publicSupporters(role), total: countPublicSupporters(role) })
   })
 
   const forbiddenOrigin = (req) => {
